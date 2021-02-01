@@ -1,0 +1,63 @@
+{% extends 'contact_management/base.html' %}
+{% load static %}
+{% load bootstrap4 %}
+{% load render_table from django_tables2 %}
+{% load querystring from django_tables2 %}
+
+{% block content %}
+<div class="content-wrapper">
+  <div class="row">
+    <div class="col-md-12 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <p class="card-title">FILTER ACCOUNTS</p>
+          {% if filter %}
+          <form action="" method="get" class="form form-horizontal">
+            <div class="row">
+              <div class="col-sm-4">
+                {% bootstrap_field filter.form.first_name %}
+              </div>
+              <div class="col-sm-4">
+                {% bootstrap_field filter.form.first_name %}
+              </div>
+              <div class="col-sm-4">
+                {% bootstrap_field filter.form.first_name %}
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-sm-6">
+               
+              </div>
+              <div class="col-sm-6">
+                
+              </div>
+            </div>
+                <div class="d-flex flex-wrap justify-content-xl-around">
+                {% bootstrap_button 'FILTER' %}
+
+               {% bootstrap_button 'CLEAR' href='.' %}
+              </div>
+          
+           
+          </form>
+          {% endif %}
+        </div>  
+      </div>
+    </div>
+  </div>
+  <div class="row">
+    <div class="col-md-12 grid-margin stretch-card">
+      <div class="card">
+        <div class="card-body">
+          <p class="card-title">SEARCH RESULTS</p>
+          {% render_table table %}
+        </div>
+      </div>
+    </div>
+  </div>
+  
+
+</div>
+    
+
+{% endblock %}

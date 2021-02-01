@@ -1,0 +1,146 @@
+{% extends 'contact_management/base.html' %}
+{% load static %} 
+
+
+{% load bootstrap4 %}
+{% load render_table from django_tables2 %}
+{% block content %}
+
+
+
+    <div class="content-wrapper">
+        <div class="row">
+            <div class="col-md-12 grid-margin stretch-card">
+              <div class="card">
+                <div class="card-body">
+                    <p class="card-title">FILTER ACCOUNTS</p>
+                    {% if filter %}
+                    <form action="" method="get" class="form form-horizontal">
+                      <div class="col-12 grid-margin">
+                        <div class="card">
+                          <div class="card-body">   
+                            {% bootstrap_button 'FILTER' %}
+                            {% bootstrap_button 'CLEAR' href='?' %}
+                            {% if create == True %}
+                            <button type="button" class="btn btn-success" data-toggle="modal" data-target="#exampleModalCenter">CREATE CALL LIST</button>
+                            {% endif %}
+                            <hr>
+                            <div class="row">
+                              <div class="col-sm-6">
+                              {% bootstrap_field filter.form.name size="small" %}
+                              </div>
+                              <div class="col-sm-6">
+                              {% bootstrap_field filter.form.id size="small" %}
+                              </div>
+                            </div>
+                            <div class="row">
+                              <div class="col-sm-4">
+                              {% bootstrap_field filter.form.billing_city size="small" %}
+                              </div>
+                              <div class="col-sm-4">
+                                {% bootstrap_field filter.form.billing_state size="small" %}
+                              </div>
+                              <div class="col-sm-4">
+                                {% bootstrap_field filter.form.tags size="small" %}
+                              </div>
+                            </div>
+                            <div class="row">
+                              <div class="col-sm-4">
+                              
+                              </div>
+                              <div class="col-sm-4">
+                                
+                              </div>
+                              <div class="col-sm-4">
+                                
+                              </div>
+                            </div>
+                            <div class="row">
+                              <div class="col-sm-4">
+                              
+                              </div>
+                              <div class="col-sm-4">
+                                
+                              </div>
+                               <div class="col-sm-4">
+                                
+                              </div>                            
+                            </div>                           
+                            <hr>
+                            {% bootstrap_button 'FILTER' %}
+                            {% bootstrap_button 'CLEAR' href='?' %}
+                            {% if create == True %}        
+                            {% endif %}
+                            {% endif %}
+                          </div>
+                        </div>
+                      </div>
+                    </form>
+                </div>
+              </div>
+            </div>
+        </div>
+
+
+    
+        <div class="row">
+           <div class="col-md-12 grid-margin stretch-card">
+            <div class="card">
+              <div class="card-body">
+                <p class="card-title">{{filter.qs|length}} ACCOUNTS MATCH YOUR QUERY</p>
+                <button type="button" class="btn btn-success" data-toggle="modal" data-target="#createCampaign">CREATE CAMPAIGN</button>
+                <form method="post" action=".">
+                  {% csrf_token %}
+                    <div class="row">
+                      <div class="col-sm-4 sm-offset-5">
+                        <label for="select-all">SELECT ALL</label>
+                          <input type="checkbox" name="select-all" id="select-all"/>
+                      </div>
+                    </div>
+                    {% render_table table %}
+                     <div class="modal fade" id="createCampaign" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">      
+                        <div class="modal-dialog modal-dialog-centered" role="document">
+                          <div class="modal-content">
+                            <div class="modal-header">
+                              <h5 class="modal-title" id="exampleModalLongTitle">Create Campaign {{c.record}}</h5>
+                              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                              </button>
+                            </div>
+                            <div class="modal-body">          
+                                
+                              </div>
+                            <div class="modal-footer">
+                             <input class="btn btn-primary" type="submit" value="Save" />
+                             
+                            </div>
+                          </div>
+                        </div>
+                     </div>
+                </form>
+              </div>
+            </div>
+           </div>
+        </div>
+
+
+
+<style type="text/css">
+.anyClass {
+  height:150px;
+  overflow-y: scroll;
+}
+</style>
+<style type="text/css">
+.anyClassBig {
+  height:2500px;
+  overflow-y: scroll;
+}
+</style>
+
+
+{% endblock %}
+
+<!-- Create book button -->
+
+

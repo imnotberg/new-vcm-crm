@@ -1,0 +1,99 @@
+{% extends 'contact_management/base.html' %}
+{% load humanize %}
+{% load bootstrap4 %}
+{% block content %}
+<div class="content-wrapper">
+	<div class="row">
+		<div class="col-sm-3">
+			<div class="card">
+				<div class="card-body">
+				<div class="table-responsive">
+					<table class="table table-hover">
+					{% if object.account.logo %}
+						<tr>
+							<td style="text-align: center;"><a href="{{object.website}}"><img src="{{object.logo}}"></a></td>
+						</tr>
+						{% endif %}
+						<tr>
+							<td style="text-align: center"><h3>{{object}}</h3><br><p><a href="{% url 'contact_management:account_detail' object.account.pk %}">{{object.account}}</a></p></td>						
+						</tr>
+						<tr>
+							<td style="text-align: center"><h5>{{object.account.billing_address_line|default_if_none:""}}<br>
+							{{object.account.billing_city|default_if_none:""}} {{object.account.billing_state|default_if_none:""}}
+							{{object.account.billing_postcode|default_if_none:""}}</h5>
+							</td>						
+						</tr>
+						<tr>
+							<td style="text-align: center"><a href="{{object.website}}" target="_blank">{{object.account.website|slice:"25"}}</a></td>
+						</tr>
+						<tr>
+							<td>
+								<div class="d-flex justify-content-center">
+									<a href="{% url 'contact_management:contact_update' account_id=object.account.pk pk=object.pk %}"><i class="mdi mdi-pencil icon-md mr-3"></i></a>
+									<a data-toggle="modal" data-target="#exampleModalCenter" href="#exampleModalCenter"><i class="mdi  mdi-comment-plus-outline icon-md mr-3"></i></a>						
+									<a data-toggle="modal" data-target="#emailModal" href="#emailModal"><i class="mdi  mdi-email icon-md mr-3"></i></a>								
+									<a href=""><i class="mdi  mdi-cart icon-md mr-3"></i></a>					
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<hr>
+				<p class="card-title">COMPANY INFO</p>
+				<div class="table-responsive">
+					<table class="table table-hover">
+						<tr>
+							<th>Phone</th>
+							<td>{{object.phone|default_if_none:""}}</td>
+						</tr>
+						<tr>
+							<th>Email</th>
+							<td><a href="mailto:{{object.email}}">{{object.email|default_if_none:""}}</a></td>
+						</tr>
+
+						<tr>
+							<th>Type</th>
+							<td>{{object.account.customer_type}}</td>
+						</tr>
+						<tr>
+							<th>Status</th>
+							<td>{{object.account.status}}</td>
+						</tr>
+						<tr>
+							<th>Sales</th>
+							<td>${{object.account.sales|floatformat:2|intcomma|default_if_none:"0"}}</td>
+						</tr>
+						<tr>
+							<th>Last Activity</th>
+							<td>{{object.last_contact|default_if_none:""  }}</td>
+						</tr>
+						<tr>
+							<th>Follow Up Date</th>
+							<td>{{object.follow_up_date|default_if_none:""  }}</td>
+						</tr>
+						<tr>
+							<th>Other Contacts</th>
+							<td>
+								<ul>
+									{% for s in object.account.contacts.all %}
+									{% if s != object %}
+									<li><a href="{% url 'contact_management:contact_detail' account_id=object.account.pk pk=s.pk %}">{{s}}</a></li>
+									{% endif %}
+									{% endfor %}
+								</ul>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			</div>
+		</div>
+		<div class="col-sm-9">
+			
+			{% include 'contact_management/contact_tabs.html' %}
+		</div>
+	</div>
+</div>
+{% include 'contact_management/contact_note_modal.html' %}
+{% include 'contact_management/contact_email_form.html' %}
+{% endblock %}

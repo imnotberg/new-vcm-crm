@@ -1,0 +1,22 @@
+{% load bootstrap4 %}
+
+
+<div class="card">
+	<div class="card-body">
+		{% if object.info.empty != False %}
+		<h3>DESCRIPTION:</h3>
+		<br>
+		<p>{{object.seo.info.description.0}}</p>
+		<br>
+		<h3>Keywords</h3>
+		<ul>
+			
+			<li>{{object.seo.info.keywords}}</li>
+						
+		</ul>
+		
+		{% endif %}
+	</div>
+</div>
+
+

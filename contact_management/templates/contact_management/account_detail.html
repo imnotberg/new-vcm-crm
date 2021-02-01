@@ -1,0 +1,169 @@
+{% extends 'contact_management/base.html' %}
+{% load humanize %}
+{% load bootstrap4 %}
+{% block content %}
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+<div class="content-wrapper">
+	<div class="row">
+		<div class="col-sm-3">
+			<div class="card">
+				<div class="card-body">
+				<div class="table-responsive">
+					<table class="table table-hover">
+						{% if object.logo %}
+						<tr>
+							<td style="text-align: center;"><a href="{{object.website}}"><img src="{{object.logo}}"></a></td>
+						</tr>
+						{% endif %}
+						<tr>
+
+							<td style="text-align: center"><h3>{{object}}</h3></td>						
+						</tr>
+						<tr>
+							<td style="text-align: center"><h5>{{object.billing_street|default_if_none:""}}<br>
+							{{object.billing_city|default_if_none:""}} {{object.billing_state|default_if_none:""}}
+							{{object.billing_postcode|default_if_none:""}}</h5>
+							</td>						
+						</tr>
+						<tr>
+							<td style="text-align: center"><a href="{{object.website}}" target="_blank">{{object.website|slice:"25"|default_if_none:""}}</a></td>
+						</tr>
+						<tr>
+							<td>
+								<div class="d-flex justify-content-center">
+									<a href=""><i class="mdi mdi-pencil icon-md mr-3"></i></a>
+									<a data-toggle="modal" data-target="#exampleModalCenter" href="#exampleModalCenter"><i class="mdi  mdi-comment-plus-outline icon-md mr-3"></i></a>						
+									<a data-toggle="modal" data-target="#emailFormModal" href="#emailFormModal"><i class="mdi  mdi-email icon-md mr-3"></i></a>
+									<a href=""><i class="mdi  mdi-account-multiple-plus icon-md mr-3"></i></a>
+									<a href=""><i class="mdi  mdi-cart icon-md mr-3"></i></a>
+									<a href="#callSheetModal" data-toggle="modal" data-target="#callSheetModal"><i class="mdi  mdi-deskphone icon-md mr-3"></i></a>		
+								</div>
+							</td>
+						</tr>
+					</table>
+				</div>
+				<hr>
+				<p class="card-title">COMPANY INFO</p>
+				<div class="table-responsive">
+					<table class="table table-hover">
+						<tr>
+							<th>Phone</th>
+							<td>{{object.phone}}</td>
+						</tr>
+						<tr>
+							<th>Email</th>
+							<td><a href="mailto:{{object.email}}">{{object.email}}</a></td>
+						</tr>
+						<tr>
+							<th>Main Contact</th>
+							<td>{{object.contact_name}}</td>
+						</tr>
+						<tr>
+							<th>Type</th>
+							<td>{{object.customer_type}}</td>
+						</tr>
+						<tr>
+							<th>State</th>
+							<td><a href="">{{object.billing_state}}</a></td>
+						</tr>
+						<tr>
+							<th>Status</th>
+							<td>{{object.status}}</td>
+						</tr>
+						<tr>
+							<th>Sales</th>
+							<td>${{object.sales|floatformat:2|intcomma|default_if_none:"0"}}</td>
+						</tr>
+						<tr>
+							<th>Last Activity</th>
+							<td>{{object.last_contact|default_if_none:""  }}</td>
+						</tr>
+						<tr>
+							<th>Follow Up Date</th>
+							<td>{{object.follow_up_date|default_if_none:""  }}</td>
+						</tr>
+						<tr>
+							<th>Ship To</th>
+							<td>{{object.ship_street|default_if_none:""  }}<br>
+								{{object.ship_city|default_if_none:""  }}
+								{{object.ship_state|default_if_none:""  }}
+								{{object.ship_postcode|default_if_none:""  }}
+
+							</td>
+						</tr>
+						<tr>
+							<th>Similar Companies</th>
+							<td>
+								<ul>
+									{% for s in object.similar_companies %}
+									<li><a href="">{{s}}</a></li>
+									{% endfor %}
+								</ul>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			</div>
+		</div>
+
+		<div class="col-sm-6">
+			{% include 'contact_management/account_tabs.html' %}
+		</div>
+		<div class="col-sm-3">
+			<div class="card">
+				<canvas id="myChart"></canvas>
+				<hr \>
+				<canvas id="monthChart"></canvas>
+
+			</div>
+		</div>
+	</div>
+</div>
+{% include 'contact_management/note_modal.html' %}
+
+ <div class="modal fade" id="emailFormModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <form method="post">
+      {% csrf_token %}
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLongTitle">Email Contacts for {{object}}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body"> 
+        	<div class="row">
+        		<h4>Choose contacts you'd like to email.</h4>
+        	</div>
+        	
+          {% for c in object.contacts.all %}
+          {% if c.email is not None and c.email != '' %}
+          <div class="form-check">
+  			<input class="form-check-input" type="checkbox" id="inlineCheckbox{{c.pk}}" name="checkbox{{c.pk}}" value="{{c.pk}}">
+  			<label class="form-check-label" for="inlineCheckbox{{c.pk}}">{{c.full_name}}: {{c.email}}</label>
+			</div>
+			{% endif %}
+          {% endfor %}
+      
+
+           
+              <input type="hidden" name="contactEmail" value="True" id="contactEmail">
+        </div>
+        <div class="modal-footer">
+         <input class="btn btn-primary" type="submit" value="Send" />
+         
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+
+
+
+
+
+
+{% endblock %}

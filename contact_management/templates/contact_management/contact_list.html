@@ -1,0 +1,137 @@
+{% extends 'contact_management/base.html' %}
+{% load static %} 
+
+{% load bootstrap %}
+{% load bootstrap4 %}
+{% load render_table from django_tables2 %}
+{% load querystring from django_tables2 %}
+
+{% block content %}
+<div class="content-wrapper">    
+    <div class="row">
+            <div class="col-md-12 grid-margin stretch-card">
+              <div class="card">
+                <div class="card-body">
+                <p class="card-title">FILTER CONTACTS</p>
+{% if filter %}
+    <form action="" method="get" class="form form-horizontal">
+        
+        <div class="col-12 grid-margin">
+              <div class="card">
+                <div class="card-body">
+                  
+                  <form class="form-sample">
+                    <p class="card-description">
+                      ACCOUNT INFO
+                    </p>
+                    <div class="row">
+                      <div class="col-md-6">
+                        {% bootstrap_field filter.form.first_name layout='horizontal' placeholder='FIRST NAME' %}
+                      </div>
+                      <div class="col-md-6">
+                        {% bootstrap_field filter.form.last_name layout='horizontal' placeholder='LAST NAME' %}
+                      </div>
+                  </div>
+                  <div class="row">
+                      <div class="col-md-6">
+                        {% bootstrap_field filter.form.account__name layout='horizontal' placeholder='COMPANY' %}
+                      </div>
+                      <div class="col-md-6">
+                        {% bootstrap_field filter.form.account__billing_state layout='horizontal' placeholder='COMPANY' %}
+                      </div>
+                  </div>
+                  <div class="row">
+                      <div class="col-md-3">
+                        {% bootstrap_field filter.form.account__tags layout='horizontal'  %}
+                      </div>
+                      <div class="col-md-3">
+                        
+                      </div>
+                      <div class="col-md-3">
+                       
+                      </div>
+                      <div class="col-md-3">
+                        
+                      </div>
+                  </div>
+                  <div class="row">
+                    <div class="col-sm-4">
+                      
+                    </div>
+                    <div class="col-sm-4">
+                      
+                    </div>
+                  </div>     
+       
+        {% bootstrap_button 'FILTER' %}
+        {% bootstrap_button 'CLEAR' href='?' %}        
+    </form>
+
+</div>
+</div>
+</div>
+</form>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Button trigger modal -->
+<div class="row">
+  <div class="col-md-12 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body">
+<button type="button" class="btn btn-primary" data-toggle="modal" data-target="#exampleModalCenter">
+  Assign Contacts
+</button>
+<form method="get" action="">  
+  {% csrf_token %}
+  {% for q in filter.qs %}
+  <input type="hidden" name="name_{{q.pk}}" value="{{q.pk}}">
+  {% endfor %}
+  <input type="submit" name="SUBMIT">  
+
+</form>
+<!-- Modal -->
+<div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+    <form method="post" action="">
+        {% csrf_token %}
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">Assign Contacts</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        {{assign_contact_form}}
+        {% for f in filter.qs %}
+        <input type="hidden" name="{{f.id}}" value="{{f}}">
+        {% endfor %}
+       
+
+       
+      </div>
+      <div class="modal-footer">
+       <input class="btn btn-primary" type="submit" value="Save" />
+       
+      </div>
+    </div>
+  </div>
+</form>
+</div>
+ 
+</div>
+{% endif %}
+<p class="card-title">{{filter.qs|length}} CONTACTS MATCH YOUR QUERY</p>
+
+{% render_table table %}
+</div>
+</div>
+</div>
+</div>
+
+</div>
+</div>
+{% endblock %}

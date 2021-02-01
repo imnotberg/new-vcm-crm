@@ -1,0 +1,138 @@
+{% load bootstrap4 %}
+{% load humanize %}
+
+<div class="row">
+  <div class="col-md-12 grid-margin stretch-card">
+    <div class="card">
+      <div class="card-body dashboard-tabs p-0">
+        <ul class="nav nav-tabs px-4" role="tablist">
+          <li class="nav-item active">
+             <a class="nav-link active" id="notes-tab" data-toggle="tab" href="#notes" role="tab" aria-controls="notes" aria-selected="false">NOTES</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" id="favorites-tab" data-toggle="tab" href="#orders" role="tab" aria-controls="favorites" aria-selected="false">ORDERS</a>
+          </li>          
+          <li class="nav-item">
+            <a class="nav-link" id="favorites-tab" data-toggle="tab" href="#pricing" role="tab" aria-controls="favorites" aria-selected="false">PRICING</a>
+          </li>
+        </ul>
+        <div class="tab-content py-0 px-0">
+          <div class="tab-pane show active" id="notes" role="tabpanel" aria-labelledby="notes-tab">
+              <div class="card">
+                <div class="card-body">
+
+                  <div class="table-responsive">
+                    <table class="table table-hover">
+                     <thead>
+                        <tr>
+                          <th>
+                            Date
+                          </th>
+                          <th>
+                            Contact
+                          </th>
+                          <th>
+                            Type
+                          </th>
+                          <th>
+                            Note
+                          </th>
+                          <th>
+                            Follow-up
+                          </th>
+                          <th>
+                            Entered by
+                          </th>
+                          <th>
+                            Delete
+                          </th>                          
+                        </tr>
+                     </thead>
+                     <tbody>
+                      	{% for n in object.notes.all %}
+                        {% if n.contact_type != 'PREP' and n.note != '' %}
+                      		<tr>
+                      			<td>{{n.date}}</td>
+                            {% if n.contact == object %}
+                            <td>CONTACT</td>
+                            {% else %}
+                            <td>COMPANY</td>
+                            {% endif %}
+                            <td>{{n.contact_type}}</td>
+                      			<td>{{n.note}}</td>
+                            <td>{{n.follow_up_date|default_if_none:""}}</td>
+                      			<td>{{n.user.username}}</td>
+                            <td><a href="">DELETE</a></td>
+                      		</tr>
+                        {% endif %}
+                      	{% endfor %}                       
+                     </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+          </div>
+          <div class="tab-pane fade" id="orders" role="tabpanel" aria-labelledby="favorites-tab">
+                              <div class="table-responsive">
+                    <table class="table table-hover">
+                      <thead>
+                        <tr>
+                          <th>
+                            Date
+                          </th>
+                          <th>
+                            Number
+                          </th>
+                          <th>
+                            Amount
+                          </th>
+                          <th>
+                            Order
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {% for i in object.account.invoices.all %}
+                          <tr>
+                            <td>{{i.date}}</td>
+                            <td>{{i.pk}}</td>
+                            <td><strong>$</strong>{{i.amount|floatformat:2|intcomma|default_if_none:"0"}}</td>
+                            <td><a href="">DETAILS</a></td>
+                          </tr>
+
+                        {% endfor %}                       
+                      </tbody>
+                    </table>
+                  </div>
+          </div>
+
+          <div class="tab-pane fade" id="pricing" role="tabpanel" aria-labelledby="orders-tab">
+            <div class="table table-responsive">
+                  <table class="table table-hover">
+                    <thead>
+                      <tr>
+                        <th>Item</th>
+                        <th>Date</th>
+                        <th>Quantity</th>
+                        <th>Price</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {% for a,b in object.account.product_history.iterrows %}
+                      <tr>
+                        <td>{{b.ITEM}}</td>
+                        <td>{{b.DATE}}</td>
+                        <td>{{b.QUANTITY}}</td>
+                        <td><strong>$</strong>{{b.PRICE|floatformat:2|intcomma|default_if_none:""}}</td>
+                      </tr>
+                      {% endfor %}
+                    </tbody>
+                  </table>
+                </div>
+          </div>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
