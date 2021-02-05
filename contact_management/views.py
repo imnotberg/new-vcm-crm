@@ -5,6 +5,8 @@ from django.contrib.auth import logout,authenticate,login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.mixins import AccessMixin, LoginRequiredMixin
+from django.core import serializers
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect,render
 from django.views.generic import (
     CreateView,
@@ -16,9 +18,10 @@ from django.views.generic import (
     View,
 )
 from .filters import AccountFilter,ContactFilter,LeadFilter
-from .forms import NoteForm
+from .forms import NoteForm,EmailForm,AddContactForm
 from .models import *
 from .tables import AccountTable,ContactTable,LeadTable
+from .utils import get_value,login_url
 
 # Create your views here.
 
@@ -64,8 +67,6 @@ class AccountListView(LoginRequiredMixin,SingleTableMixin, FilterView):
         context['filter']=AccountFilter(self.request.GET,queryset=self.get_queryset())  
 
         return context
-           
-        
 
 class AccountDetailView(LoginRequiredMixin,DetailView):
     login_url = 'contact_management:login'
@@ -73,74 +74,69 @@ class AccountDetailView(LoginRequiredMixin,DetailView):
     form_class = NoteForm
     template_name = 'contact_management/account_detail.html'
 
+    def render_to_response(self, context, **response_kwargs):
+        if self.request.is_ajax():
+            return JSONResponse('Success',safe=False, **response_kwargs)
+        else:
+            return super(AccountDetailView,self).render_to_response(context, **response_kwargs)
     def get_context_data(self,**kwargs):
         context = super().get_context_data(**kwargs)
         context['account'] = Account.objects.get(pk=self.kwargs['pk'])
         context['note_form'] = NoteForm
+        context['email_form'] = EmailForm
+        context['add_contact_form'] = AddContactForm
         return context
+
     def post(self, request, *args, **kwargs):
-        contact_email = request.POST.get('contactEmail',None)
-        if contact_email is not None and contact_email != '':
-            contacts = Contact.objects.filter(pk__in=[y for x,y in self.request.POST.items() if 'checkbox' in x])
-            body = request.POST.get('body',None)
-            subject = request.POST.get('subject',None)
-            template = request.POST.get('template',None)
-            sg_template_on = request.POST.get('sg_template_on',False)
-            sg_template = request.POST.get('sg_template',None)
-            if template is not None:
-                body = None
-            if sg_template_on !=False:
-                sg_template_on=True
-            for c in contacts:
-                c.send_email(subject,body,sg_template_on,sg_template,template)
-
-        follow_up = request.POST.get('follow_up',None)
-        follow_up_date_year = request.POST.get('follow_up_date_year',None)
-        follow_up_date_month = request.POST.get('follow_up_date_month',None)
-        follow_up_date_day = request.POST.get('follow_up_date_day',None)
-        follow_up_type = request.POST.get('follow_up_type',None)
-        follow_up_user = request.POST.get('follow_up_user',None)    
-
-        if follow_up_date_year is not None and follow_up_date_month is not None and follow_up_date_day is not None:
-            fud = datetime(int(follow_up_date_year),int(follow_up_date_month),int(follow_up_date_day))
-        self.object = self.get_object()         
-        form = self.form_class(request.POST)
-        context = self.get_context_data()           
-        if form.is_valid():
-            account = context['account']        
-            note = form.save(commit=False)
-            note.date = datetime.now()          
-            note.account = context['account']
-            note.user = request.user
-            note.save()
-            targets = CallSheetTarget.objects.filter(account=note.account,contacted=False)
-            for tgt in targets:
-                tgt.contacted = True
-                tgt.save()  
-            if follow_up is not None and follow_up == 'on' and fud is not None:
-                call_sheet,created = CallSheet.objects.get_or_create(date=fud,user=User.objects.get(username=follow_up_user),contact_type=follow_up_type)
-                call_sheet.save()               
-                target = CallSheetTarget(call_sheet=call_sheet,account=note.account,contact_type=follow_up_type)
-                target.save()
-                target.account.follow_up_date = fud
-                target.account.save()
-                
-        def form_valid(self,form):
-            context = self.get_context_data()
-            note = form.save(commit=False)
-            note.date = datetime.now()          
-            note.account = context['account']
-            note.user = request.user
-            note.save()         
-            #account.notes.add(note)
-            #account.save()         
-            return super().form_valid(form)
-        return redirect(context['account'])
+        self.object = self.get_object()
+        context = self.get_context_data(object=self.object)
+        return self.render_to_response(context)
+   
+    
     
 
 class AccountUpdateView(LoginRequiredMixin,UpdateView):
     model = Account
     fields = '__all__'
+
+    def get_form(self,form_class=None):
+        form = super(AccountUpdateView, self).get_form(form_class)
+        form.fields['email'].required=False
+        form.fields['phone'].required=False
+        form.fields['billing_street'].required=False
+        form.fields['billing_city'].required=False
+        form.fields['billing_state'].required=False
+        form.fields['billing_postcode'].required=False
+        form.fields['contact_name'].required=False
+        form.fields['customer_type'].required=False
+        form.fields['tags'].required=False
+        form.fields['follow_up_date'].required=False
+
+        return form
+
+    def get_context_data(self,**kwargs):
+        context = super().get_context_data()
+        note_form = NoteForm
+
+        return context
+
+    
+@login_required(login_url='contact_management:login')
+def make_primary_contact(request,account_id,contact_id):
+    account = Account.objects.get(pk=account_id)
+    contact = Contact.objects.get(pk=contact_id)
+    account.contact_name = contact.full_name
+    account.save()
+    return redirect(request.META['HTTP_REFERER'])
+
+@login_required(login_url='contact_management:login')
+def remove_contact(request,contact_id):
+    contact = Contact.objects.get(pk=contact_id)
+    contact.delete()
+
+    return redirect(request.META['HTTP_REFERER'])
+    
+
 
 class ContactListView(LoginRequiredMixin,SingleTableMixin,FilterView):
     login_url = 'contact_management:login'
@@ -167,11 +163,21 @@ class ContactDetailView(LoginRequiredMixin,DetailView):
         context = super().get_context_data(**kwargs)
         context['account'] = Account.objects.get(pk=self.kwargs['account_id'])
         context['note_form'] = NoteForm
+        context['email_form'] = EmailForm
         return context
 
 class ContactUpdateView(LoginRequiredMixin,UpdateView):
     model = Contact
     fields = '__all__'
+
+    def get_form(self,form_class=None):
+        form = super(ContactUpdateView, self).get_form(form_class)
+        for field in form.fields:
+            form[field].required = False
+        form.fields["follow_up_date"].required=False
+        form.fields["account"].required=False
+
+        return form
 
 class LeadListView(LoginRequiredMixin,SingleTableMixin,FilterView):
     login_url = 'contact_management:login'
@@ -197,8 +203,106 @@ class LeadDetailView(LoginRequiredMixin,DetailView):
     def get_context_data(self,**kwargs):
         context = super().get_context_data(**kwargs)
         context['note_form'] = NoteForm
+        context['email_form']=EmailForm
         return context
+class LeadUpdateView(LoginRequiredMixin,UpdateView):
+    login_url = 'contact_management:login'
+    model = Lead
+    fields = '__all__'
 
+    def get_form(self,form_class=None):
+        form = super(LeadUpdateView, self).get_form(form_class)
+        for field in form.fields:
+            form.fields[field].required = False
+        return form
+@login_required(login_url=login_url)
+@login_required(login_url='contact_management:login')
+def add_contact(request,form_data):
+    if request.is_ajax and request.method == 'POST':
+        jform = json.loads(form_data)
+        account= Account.objects.get(pk=int(jform["account_id"]))
+        first_name = jform.get("first_name",None)
+        last_name = jform.get("last_name",None)
+        phone = jform.get("phone",None)
+        email = jform.get("email",None)
+        description = jform.get("description",None)
+        c = Contact(first_name=first_name,last_name=last_name,phone=phone,email=email,account=account,description=description)
+        c.save()
+        new_contact = serializers.serialize("json",[c,])
+        print(new_contact)
+        return JsonResponse({"new_contact":new_contact},safe=False)
+    else:
+        return JsonResponse({"error":"error",},safe=False)
+
+@login_required(login_url='contact_management:login')
+def note_delete(request,note_id):
+    note = Note.objects.get(pk=note_id)
+    note.delete()
+    return redirect(request.META['HTTP_REFERER']) 
+@login_required(login_url='contact_management:login')
+def send_email_form(request,form_data):
+    #send_email(self,subject=None,body=None,sg_template_on=False,sg_template=None,template=None,campaign=None):
+    if request.is_ajax and request.method == 'POST':
+        jform = json.loads(form_data)
+        print(jform)
+        contacts = Contact.objects.filter(pk__in=[v for k,v in jform.items() if 'contact-checkbox' in k])
+        leads = Lead.objects.filter(pk__in=[v for k,v in jform.items() if 'lead-checkbox' in k])
+        subject = jform.get("subject",None)
+        body = jform.get("body",None)
+        sg_template_on = jform.get("sg_template_on",None)
+        sg_template = jform.get("sg_template",None)
+        template = jform.get("template",None)
+        if template == '':
+            template = None        
+        if template is not None:
+            body = None
+        if sg_template_on == True:
+            template = sg_template
+        
+        for c in contacts:
+            #c.send_email(subject,body,self.sg_template_on,sg_template,template,self.id)
+            c.send_email(subject,body,sg_template_on,sg_template,template,campaign=None)
+        for l in leads:
+            l.send_email(subject,body,sg_template_on,sg_template,template,campaign=None)
+       
+        return JsonResponse(jform)      
+@login_required(login_url='contact_management:login')
+def note_create(request,form_data):
+    if request.is_ajax and request.method == 'POST':
+        jform = json.loads(form_data)
+        if jform["note_type"] == "ACCOUNT":
+            n = Note(account= Account.objects.get(pk=jform["account_id"]))
+        elif jform["note_type"] == "CONTACT":
+            n = Note(contact= Contact.objects.get(pk=jform["contact_id"]))
+        elif jform["note_type"] == "LEAD":
+            n = Note(lead= Lead.objects.get(pk=jform["lead_id"]))
+        contact_type = jform.get("contact_type",None)
+        note = jform.get("note",None)
+        n.date = datetime.now()
+        n.user = request.user
+        follow_up = jform.get("follow_up",None)
+        follow_up_user = jform.get("follow_up_user",None)
+        follow_up_type = jform.get("follow_up_type",None)
+        follow_up_year = jform.get("follow_up_date_year",None)
+        follow_up_month = jform.get("follow_up_date_month",None)
+        follow_up_day = jform.get("follow_up_date_day",None)
+        if contact_type is not None and contact_type != '':
+            n.contact_type = contact_type
+        if note is not None and note != '':
+            print(note,'this si the note')
+            n.note = note
+        if follow_up == 'on':
+            n.follow_up = True
+            follow_up_date = datetime(int(follow_up_year),int(follow_up_month),int(follow_up_day))
+            n.follow_up_date = follow_up_date
+            if follow_up_type is not None and follow_up_type != '':
+                n.follow_up_type = follow_up_type
+        n.save()
+        print('notesaved',n)
+        new_note = serializers.serialize("json",[n,])
+        return JsonResponse({"new_note":new_note,})
+    else:
+        return JsonResponse({"not_data":"not_data"})
 @login_required(login_url='contact_management:login')
 def delete_lead(request,pk):
     lead = Lead.objects.get(pk=pk)
@@ -212,5 +316,6 @@ def convert_lead(request,pk):
     new_contact = lead.convert_lead()
 
     return redirect('contact_management:contact_detail',args={"account_id":new_contact.account.id,"pk":new_contact.pk})
+
 
 

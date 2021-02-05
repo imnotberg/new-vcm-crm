@@ -22,7 +22,7 @@
                 <div class="card-body">
 
                   <div class="table-responsive">
-                    <table class="table table-hover">
+                    <table class="table table-hover table-sm" id="notes-table">
                      <thead>
                         <tr>
                           <th>
@@ -49,7 +49,7 @@
                         </tr>
                      </thead>
                      <tbody>
-                      	{% for n in object.notes.all %}
+                      	{% for n in object.notes %}
                         {% if n.contact_type != 'PREP' and n.note != '' %}
                       		<tr>
                       			<td>{{n.date}}</td>
@@ -62,7 +62,7 @@
                       			<td>{{n.note}}</td>
                             <td>{{n.follow_up_date|default_if_none:""}}</td>
                       			<td>{{n.user.username}}</td>
-                            <td><a href="">DELETE</a></td>
+                            <td><a href="{% url 'contact_management:note_delete' n.pk %}">DELETE</a></td>
                       		</tr>
                         {% endif %}
                       	{% endfor %}                       

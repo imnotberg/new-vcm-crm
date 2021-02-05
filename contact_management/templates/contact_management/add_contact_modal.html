@@ -1,0 +1,76 @@
+{% load bootstrap4 %}
+<div class="modal fade" id="addContactFormModal" tabindex="-1" role="dialog" aria-labelledby="addContactFormModal" aria-hidden="true">
+<form method="post" id="add-contact-form">
+      {% csrf_token %}
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLongTitle">ADD CONTACTS for {{object}}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">      	
+
+
+      
+          {% bootstrap_form add_contact_form %}
+
+           
+
+        </div>
+        <div class="modal-footer">
+        	<input type="hidden" name="account_id" value="{{object.pk}}">
+         <input class="btn btn-primary" type="submit" value="Add Contact" />
+         
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+<script type="text/javascript">
+function addContact(form){
+    let csrfValue = document.getElementsByName("csrfmiddlewaretoken")[0].value;
+    fetch("{% url 'contact_management:add_contact' 'xxxxxxxx' %}".replace('xxxxxxxx',form.toString()),{method:"Post",headers:{"X-CSRFToken": csrfValue,"X-Requested-With": "XMLHttpRequest"}}
+            ).then(function(response) {
+          return response.json();
+        }).then(function(data) {            
+            let info = data;
+            let newContact = JSON.parse(info["new_contact"])[0];
+            console.log(newContact);
+            console.log('the above is new contact')
+            $("#contacts-table tbody").prepend(
+              `
+                <tr>
+                  <td>${newContact["fields"]["first_name"]||""} ${newContact["fields"]["last_name"]||""}</td>
+                  <td>${newContact["fields"]["phone"]||""}</td>
+                  <td>${newContact["fields"]["email"]||""}</td>
+                  <td></td>
+                  <td></td>
+                </tr>
+              `
+              )
+        }
+
+        )
+        $('#addContactFormModal').modal('hide')
+          }
+ 
+$('#add-contact-form').on('submit', function(event){
+    event.preventDefault();
+    console.log("form submitted!")  // sanity check
+    let form = $('#add-contact-form').serialize();
+    console.log(form);
+    let formData = $('#add-contact-form').serializeArray();    
+    var json_text = JSON.stringify(formData, null, 2);    
+    let json_obj = JSON.parse(json_text);
+    let dictionary = Object.assign({}, ...formData.map((x) => ({[x.name]: x.value})));
+    console.log(dictionary);
+    console.log('this is how we do it');
+    console.log(JSON.stringify(dictionary));
+    addContact(JSON.stringify(dictionary));
+    
+});
+    
+    
+</script>

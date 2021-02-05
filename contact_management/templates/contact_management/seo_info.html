@@ -10,9 +10,9 @@
 		<br>
 		<h3>Keywords</h3>
 		<ul>
-			
-			<li>{{object.seo.info.keywords}}</li>
-						
+			{% for a in object.seo.keywords %}
+			<li>{{a}}</li>
+			{% endfor %}
 		</ul>
 		
 		{% endif %}

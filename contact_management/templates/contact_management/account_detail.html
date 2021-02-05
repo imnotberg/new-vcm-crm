@@ -32,10 +32,11 @@
 						<tr>
 							<td>
 								<div class="d-flex justify-content-center">
-									<a href=""><i class="mdi mdi-pencil icon-md mr-3"></i></a>
+									<a href="{% url 'contact_management:account_update' object.pk %}"><i class="mdi mdi-pencil icon-md mr-3"></i></a>
 									<a data-toggle="modal" data-target="#exampleModalCenter" href="#exampleModalCenter"><i class="mdi  mdi-comment-plus-outline icon-md mr-3"></i></a>						
 									<a data-toggle="modal" data-target="#emailFormModal" href="#emailFormModal"><i class="mdi  mdi-email icon-md mr-3"></i></a>
-									<a href=""><i class="mdi  mdi-account-multiple-plus icon-md mr-3"></i></a>
+									<a data-toggle="modal" data-target="#addContactFormModal" href="#addContactFormModal"><i class="mdi  mdi-account-multiple-plus icon-md mr-3"></i></a>
+									
 									<a href=""><i class="mdi  mdi-cart icon-md mr-3"></i></a>
 									<a href="#callSheetModal" data-toggle="modal" data-target="#callSheetModal"><i class="mdi  mdi-deskphone icon-md mr-3"></i></a>		
 								</div>
@@ -122,44 +123,8 @@
 	</div>
 </div>
 {% include 'contact_management/note_modal.html' %}
-
- <div class="modal fade" id="emailFormModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
-  <form method="post">
-      {% csrf_token %}
-    <div class="modal-dialog modal-dialog-centered" role="document">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="exampleModalLongTitle">Email Contacts for {{object}}</h5>
-          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-          </button>
-        </div>
-        <div class="modal-body"> 
-        	<div class="row">
-        		<h4>Choose contacts you'd like to email.</h4>
-        	</div>
-        	
-          {% for c in object.contacts.all %}
-          {% if c.email is not None and c.email != '' %}
-          <div class="form-check">
-  			<input class="form-check-input" type="checkbox" id="inlineCheckbox{{c.pk}}" name="checkbox{{c.pk}}" value="{{c.pk}}">
-  			<label class="form-check-label" for="inlineCheckbox{{c.pk}}">{{c.full_name}}: {{c.email}}</label>
-			</div>
-			{% endif %}
-          {% endfor %}
-      
-
-           
-              <input type="hidden" name="contactEmail" value="True" id="contactEmail">
-        </div>
-        <div class="modal-footer">
-         <input class="btn btn-primary" type="submit" value="Send" />
-         
-        </div>
-      </div>
-    </div>
-  </form>
-</div>
+{% include 'contact_management/email_modal.html' %}
+{% include 'contact_management/add_contact_modal.html' %}
 
 
 
