@@ -3,8 +3,9 @@ from django.forms import ModelForm
 from contact_management.models import *
 
 class NoteForm(ModelForm):
-	user_choices = [(u.username,u.username) for u  in User.objects.all()]
-	user_choices.insert(0,(None,''))
+	#user_choices = [(u.username,u.username) for u  in User.objects.all()]
+	#user_choices.insert(0,(None,''))
+	user_choices = [('','')]
 	follow_up_type_choices = [('',''),('CALL','CALL'),('EMAIL','EMAIL'),('MAIL','MAIL')]
 	contact_type_choices = [('',''),('CALL','CALL'),('EMAIL','EMAIL'),('MAIL','MAIL')]
 	contact_type = forms.ChoiceField(required=False,choices=contact_type_choices)
