@@ -26,7 +26,7 @@ SECRET_KEY = 'j#*f!&5bggc!r9gmnozitz0^%vj_(k71t2+=o-f=fgfs39%k3*'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['vcm-crm.herokuapp.com']
 
 
 # Application definition
@@ -54,7 +54,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
-    
+
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
