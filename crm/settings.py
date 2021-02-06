@@ -168,7 +168,7 @@ DATABASES['email'] = {
         "NAME": os.environ.get("EMAIL_DB_NAME",None),
         "USER": os.environ.get("EMAIL_DB_USER",None),
         "PASSWORD": os.environ.get("EMAIL_DB_PASSWORD",None),
-        "HOST": os.environ.get("EMAIL_DB_HOST",)
+        "HOST": os.environ.get("EMAIL_DB_HOST",None),
         "PORT": 5432,
     }
 try:
