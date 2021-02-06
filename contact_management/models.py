@@ -369,6 +369,11 @@ class SEO:
 
 
 #SIGNALS
+@receiver(post_save,sender=User)
+def add_profile(sender,instance,**kwargs):
+	p = Profile(user=instance)
+	p.save()
+	print('profile added')
 @receiver(post_save, sender=Note)
 def note_follow_up_date(sender, instance, **kwargs):
 	print(instance.follow_up_date,'INSTANE')

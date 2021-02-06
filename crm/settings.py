@@ -163,7 +163,14 @@ EMAIL_PORT = 587
 import dj_database_url
 db_from_env = dj_database_url.config()
 DATABASES['default'].update(db_from_env)
-
+DATABASES['email'] = {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": os.environ.get("EMAIL_DB_NAME",None),
+        "USER": os.environ.get("EMAIL_DB_USER",None)
+        "PASSWORD": os.environ.get("EMAIL_DB_PASSWORD",None),
+        "HOST": os.environ.get("EMAIL_DB_HOST",)
+        "PORT": 5432,
+    }
 try:
     from .local_settings import *
     print('local_settings__in the mf')
