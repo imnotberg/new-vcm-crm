@@ -334,8 +334,13 @@ class Tag(models.Model):
 
 	def __str__(self):
 		return f"{self.name}"
+class Messages(models.Model):
+	data = PickledObjectField()
 
-
+class EmailData:
+	def __init__(self):
+		feed = SendGridInfoData.objects.using('email').get(pk=1).data
+		self.data = feed[feed['email_source']=='VCM']
 class EmailList:
 	pass
 
@@ -369,6 +374,12 @@ class SEO:
 
 
 #SIGNALS
+@receiver(post_save,sender=SendGridInfoData)
+def saved_messages(sender,instance,using='email',**kwargs):
+	message = Messages(data=instance.data)
+	message.save()
+	print('this happened')
+
 @receiver(post_save,sender=User)
 def add_profile(sender,instance,**kwargs):
 	p = Profile(user=instance)
