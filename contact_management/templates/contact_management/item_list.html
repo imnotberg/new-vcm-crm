@@ -1,0 +1,42 @@
+{% extends 'contact_management/base.html' %}
+{% load render_table from django_tables2 %}
+{% load bootstrap4 %}
+{% block content %}
+
+	<div class="content-wrapper">
+	<div class="row">
+            <div class="col-md-12 grid-margin stretch-card">                
+            	<div class="card">
+            		<div class="card-body">                        
+            			<p class="card-title">PRODUCTS</p>
+                        <form method="get" action="">
+                        <div class="row">                            
+                            {% if filter %}
+                            
+                                {% csrf_token %}
+                            <div class="col-sm-6">
+                                {% bootstrap_field filter.form.item %}
+                            </div>
+                            <div class="col-sm-6">
+                                {% bootstrap_field filter.form.description %}
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex justify-content-around">
+                            
+                                {% bootstrap_button 'FILTER' %}
+
+                                               
+                                {% bootstrap_button 'CLEAR' href="." %}
+                           
+                        </div>
+            			{% render_table table %}
+            		</div>
+            	</div>
+            </div>
+        </div>
+    </div>
+
+
+
+{% endblock %}

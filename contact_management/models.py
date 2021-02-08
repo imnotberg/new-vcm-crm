@@ -283,6 +283,12 @@ class Invoice(models.Model):
 
 	def get_absoulte_url(self):
 		return reverse('contact_management:invoice_detail',kwargs={'account_id':self.account.id,'pk':self.pk})
+	@property
+	def total(self):
+		return sum([x.total for x in OrderItem.objects.filter(invoice=self) if x is not None])
+
+
+	
 
 class Order(models.Model):
 	account = models.ForeignKey(Account,on_delete=models.CASCADE,null=True)	
@@ -321,7 +327,7 @@ class OrderItem(models.Model):
 	description = models.CharField(max_length=1000,null=True,blank=True)
 	invoice = models.ForeignKey(Invoice,on_delete=models.CASCADE,related_name='invoice_for_order_item',null=True,blank=True)
 	def __str__(self):
-		return f"{self.order_item.item} {self.order.pk}"
+		return f"{self.order_item.item} {self.invoice.pk}"
 	@property
 	def total(self):
 		return self.price * self.quantity
@@ -334,13 +340,8 @@ class Tag(models.Model):
 
 	def __str__(self):
 		return f"{self.name}"
-class Messages(models.Model):
-	data = PickledObjectField()
 
-class EmailData:
-	def __init__(self):
-		feed = SendGridInfoData.objects.using('email').get(pk=1).data
-		self.data = feed[feed['email_source']=='VCM']
+
 class EmailList:
 	pass
 
@@ -374,17 +375,6 @@ class SEO:
 
 
 #SIGNALS
-@receiver(post_save,sender=SendGridInfoData)
-def saved_messages(sender,instance,using='email',**kwargs):
-	message = Messages(data=instance.data)
-	message.save()
-	print('this happened')
-
-@receiver(post_save,sender=User)
-def add_profile(sender,instance,**kwargs):
-	p = Profile(user=instance)
-	p.save()
-	print('profile added')
 @receiver(post_save, sender=Note)
 def note_follow_up_date(sender, instance, **kwargs):
 	print(instance.follow_up_date,'INSTANE')

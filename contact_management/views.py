@@ -12,15 +12,16 @@ from django.views.generic import (
     CreateView,
     DeleteView,
     DetailView,
+    ListView,
     FormView,
     TemplateView,
     UpdateView,
     View,
 )
-from .filters import AccountFilter,ContactFilter,LeadFilter
+from .filters import AccountFilter,ContactFilter,LeadFilter,ItemFilter,InvoiceFilter
 from .forms import NoteForm,EmailForm,AddContactForm
 from .models import *
-from .tables import AccountTable,ContactTable,LeadTable
+from .tables import AccountTable,ContactTable,LeadTable,ItemTable,InvoiceTable
 from .utils import get_value,login_url
 
 # Create your views here.
@@ -215,6 +216,52 @@ class LeadUpdateView(LoginRequiredMixin,UpdateView):
         for field in form.fields:
             form.fields[field].required = False
         return form
+class ItemListView(LoginRequiredMixin,SingleTableMixin,FilterView):    
+    login_url = 'contact_management:login'
+    model = Item
+    table_class = ItemTable
+    template_name = 'contact_management/item_list.html'
+    filterset_class = ItemFilter
+
+    def get_context_data(self,**kwargs):        
+        context = super().get_context_data(**kwargs)
+        table = self.get_table()
+        RequestConfig(self.request, paginate={"per_page": 20}).configure(table)
+        context['filter']=ItemFilter(self.request.GET,queryset=self.get_queryset())  
+
+        return context
+
+class ItemDetailView(LoginRequiredMixin,DetailView):
+    login_url = 'contact_management:login'
+    model = Item
+
+    template_name = 'contact_management/item_detail.html'
+
+    def get_context_data(self,**kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+
+class InvoiceDetailView(LoginRequiredMixin,DetailView):
+    login_url = 'contact_management:login'
+    model = Invoice
+    template_name = 'contact_management/invoice_detail.html'
+
+    def get_context_data(self,**kwargs):
+        context = super().get_context_data(**kwargs)
+        return context
+class InvoiceListView(LoginRequiredMixin,ListView):
+    login_url = 'contact_management:login'
+    model = Invoice
+    table_class = InvoiceTable
+    template_name = 'contact_management/invoice_list.html'
+    filterset_class = InvoiceFilter
+
+    def get_context_data(self,**kwargs):        
+        context = super().get_context_data(**kwargs)
+        table = InvoiceTable(Invoice.objects.all())
+        context['filter']=InvoiceFilter(self.request.GET,queryset=self.get_queryset())  
+
+        return context
 @login_required(login_url=login_url)
 @login_required(login_url='contact_management:login')
 def add_contact(request,form_data):

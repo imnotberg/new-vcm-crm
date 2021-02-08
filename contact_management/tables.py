@@ -1,7 +1,7 @@
 import django_tables2 as tables
 from django_tables2 import TemplateColumn
 from django_tables2.utils import A
-from .models import Account,Contact,Lead
+from .models import Account,Contact,Lead,Item,Invoice
 
 class AccountTable(tables.Table):
 	name = tables.LinkColumn('contact_management:account_detail',args=[A('pk')])
@@ -34,4 +34,22 @@ class LeadTable(tables.Table):
 		template_name = "django_tables2/bootstrap4.html"
 		model = Lead
 		fields = ("first_name","last_name","account_name","phone","email","tags")
+
+class ItemTable(tables.Table):
+	item = tables.LinkColumn(verbose_name='Item',args=[A('pk')])
+	description = tables.Column(verbose_name="Description")
+
+	class Meta:
+		attrs:{"class":"table table-hover table-sm"}
+		template_name = "django_tables2/bootstrap4.html"
+		model = Item
+		fields = ("item","description")
+
+class InvoiceTable(tables.Table):
+	account = tables.LinkColumn('contact_management:account_detail',args=[A('account__pk')])
+	class Meta:
+		attrs:{"class":"table table-sm table-hover"}
+		template_name = "django_tables2/bootstrap4.html"
+		model = Invoice
+		fields = ("account","date","total")
 

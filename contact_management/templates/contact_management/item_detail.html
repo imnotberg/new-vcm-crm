@@ -1,0 +1,218 @@
+{% extends 'contact_management/base.html' %}
+{% load humanize %}
+{% block content %}
+<style type="text/css">
+.anyClass {
+  height:500px;
+  overflow-y: scroll;
+}
+</style>
+<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"></script>
+ 
+        <div class="content-wrapper">
+          <div class="row">
+            <div class="col-md-12 grid-margin stretch-card">
+              <div class="card">
+                <div class="card-body dashboard-tabs p-0">
+                  <ul class="nav nav-tabs px-4" role="tablist">
+                    <li class="nav-item">
+                      <a class="nav-link active" id="overview-tab" data-toggle="tab" href="#overview" role="tab" aria-controls="overview" aria-selected="true">Overview</a>
+                    </li>                    
+                  </ul>
+                  <div class="tab-content py-0 px-0">
+                    <div class="tab-pane fade show active" id="overview" role="tabpanel" aria-labelledby="overview-tab">
+                      <div class="d-flex flex-wrap justify-content-xl-between">
+                        <div class="d-none d-xl-flex border-md-right flex-grow-1 align-items-center justify-content-center p-3 item">
+                          <i class="mdi mdi-home icon-lg mr-3 text-primary"></i>
+                          <div class="d-flex flex-column justify-content-around">
+                            <small class="mb-1 text-muted">PRODUCT</small>
+                            		<strong>{{object}}</strong>                		
+                            		<p>{{object.billing_address_line}}
+                            		{{object.billing_city}} {{object.billing_state}}, {{object.billing_postcode}}</p>
+                          </div>
+                        </div>
+                           <div class="d-flex border-md-right flex-grow-1 align-items-center justify-content-center p-3 item">
+                          <i class="mdi mdi-deskphone mr-3 icon-lg text-danger"></i>
+                          <div class="d-flex flex-column justify-content-around">
+                            <small class="mb-1 text-muted">DESCRIPTION</small>
+                            <h5 class="mr-2 mb-0">{{object.description}}</h5>
+                          </div>
+                        </div>
+                        <div class="d-flex border-md-right flex-grow-1 align-items-center justify-content-center p-3 item">
+                          <i class="mdi mdi-currency-usd mr-3 icon-lg text-danger"></i>
+                          <div class="d-flex flex-column justify-content-around">
+                            <small class="mb-1 text-muted">Sales</small>
+                            <h5 class="mr-2 mb-0">${{object.total_sales|floatformat:2|intcomma|default_if_none:"0"}}</h5>
+                          </div>
+                        </div>
+                        <div class="d-flex border-md-right flex-grow-1 align-items-center justify-content-center p-3 item">
+                          <i class="mdi mdi-currency-usd mr-3 icon-lg text-danger"></i>
+                          <div class="d-flex flex-column justify-content-around">
+                            <small class="mb-1 text-muted">Pricce</small>
+                            <h5 class="mr-2 mb-0">${{object.price|floatformat:2|intcomma|default_if_none:"0"}}</h5>
+                          </div>
+                        </div>
+
+
+                      </div>
+                    </div>
+                  </div>
+                </div>   
+
+              </div>
+
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="col-lg-6 grid-margin stretch-card">
+              <div class="card">
+                <div class="card-body">
+                  <h4 class="card-title">{{object.item}} SALES BY YEAR</h4>
+                  <canvas id="myChart"></canvas>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-6 grid-margin stretch-card">
+              <div class="card anyClass">
+                <div class="card-body">
+                  <h4 class="card-title">Similar Products</h4>
+                  <div class="table-responsive">
+                  	<table class="table table-hover">
+                  		<thead>
+                  			<tr>
+                  				<th>ITEM</th>
+                  				<th>PRICE</th>
+                  				<th>SALES</th>
+                  			</tr>
+                  		</thead>
+                  		<tbody>
+                  			{% for s in object.similar_products %}
+                  				<tr>
+                  					<td><a href="">{{s.item}}</a></td>
+                  					<td>${{s.price|floatformat:2|intcomma|default_if_none:"0"}}</td>
+                  					<td>${{s.total_sales|floatformat:2|intcomma|default_if_none:"0"}}</td>
+                  				</tr>
+                  			{% endfor %}
+                  		</tbody>
+                  	</table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-lg-6 grid-margin stretch-card">
+              <div class="card">
+                <div class="card-body">
+                  <h4 class="card-title">RECENT ORDERS</h4>
+                  <div class="table-responsive">
+                  	<table class="table table-hover">
+                  		<thead>
+                  			<tr>
+                  				<th>DATE</th>
+                  				<th>INV NO.</th>
+                  				<th>CUSTOMER</th>
+                  				<th>QTY</th>
+                  				<th>PRICE</th>
+                  			</tr>
+                  		</thead>
+                  		<tbody>
+                  			{% for r in object.recent_orders %}
+                  			<tr>
+                  				<td>{{r.date}}</td>
+                  				<td><a href="">{{r.pk}}</a></td>
+                  				<td>{{r.account.name}}</td>
+                  				{% for i in r.order.order_items %}
+                  				{% if i.order_item == object %}
+                  				<td>{{i.quantity}}</td>
+                  				<td>${{i.price|floatformat:"2"}}</td>
+                  				{% endif %}
+                  				{% endfor %}
+                  			</tr>
+                  			{% endfor %}
+                  		</tbody>
+                  	</table>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-lg-6 grid-margin stretch-card">
+              <div class="card anyClass">
+                <div class="card-body">
+                  <h4 class="card-title">BEST CUSTOMERS</h4>                  
+                  <div class="table-responsive">
+                  	<table class="table table-hover">
+                  		<thead>
+                  			<tr>
+                  				<th>ACCT #</th>
+                  				<th>CUSOMER</th>
+                  				<th>TOTAL SALES</th>
+                  			</tr>
+                  		</thead>
+                  		<tbody>
+                  			{% for a,b in object.best_customers.iterrows %}
+                  			<tr>
+                  				{% if b.order__invoice__account__id %}
+                  				<td><a href="">{{b.order__invoice__account__id|floatformat:'0'}}</a></td>
+                  				{% else %}
+                  				<td>{{b.order__invoice__account__id|floatformat:"0"}}
+                  				{% endif %}
+                  				</td>
+                  				<td>{{b.order__invoice__account__name}}</td>
+                  				<td>${{b.total_sales|floatformat:2|intcomma|default_if_none:"0"}}</td>
+                  			</tr>
+                  			{% endfor %}
+                  		</tbody>
+                  	</table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+         
+        </div>
+<script type="text/javascript">
+   
+</script>
+<script>
+ var endpoint = ""
+ var dataset = []
+ var labels = []
+ var chart_title = ''
+    $.ajax({
+        method: "GET",
+        url: endpoint,
+        success: function(data){
+            labels = data.labels
+            dataset = data.dataset
+            label = data.chart_title
+            var ctx = document.getElementById('myChart').getContext('2d');
+var myChart = new Chart(ctx, {
+    type: 'line',
+    fill: false,
+    data: {
+        labels: labels,
+        datasets: [{
+            label: label,
+            data: dataset,}]}})           
+            console.log(data.dataset)
+            console.log(dataset)
+            console.log(data.product)
+        },
+        error: function(data){
+            console.log("error")
+            console.log(error_data)
+        }
+    })
+
+
+
+
+</script>
+
+
+
+
+{% endblock %}
