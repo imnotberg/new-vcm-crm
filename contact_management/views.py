@@ -241,14 +241,6 @@ class ItemDetailView(LoginRequiredMixin,DetailView):
         context = super().get_context_data(**kwargs)
         return context
 
-class InvoiceDetailView(LoginRequiredMixin,DetailView):
-    login_url = 'contact_management:login'
-    model = Invoice
-    template_name = 'contact_management/invoice_detail.html'
-
-    def get_context_data(self,**kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
 class InvoiceListView(LoginRequiredMixin,ListView):
     login_url = 'contact_management:login'
     model = Invoice
@@ -260,7 +252,24 @@ class InvoiceListView(LoginRequiredMixin,ListView):
         context = super().get_context_data(**kwargs)
         table = InvoiceTable(Invoice.objects.all())
         context['filter']=InvoiceFilter(self.request.GET,queryset=self.get_queryset())  
+        return context
 
+class InvoiceDetailView(LoginRequiredMixin,DetailView):
+    login_url = login_url
+    model = Invoice 
+
+    def get_context_data(self,**kwargs):
+        context = super().get_context_data(**kwargs)
+        context['account'] = Account.objects.get(pk=self.kwargs['account_id'])
+        context['table']=InvoiceTable(OrderItem.objects.filter(invoice=self.object))
+        return context
+class InvoiceCreateView(LoginRequiredMixin,CreateView):
+    login_url = login_url
+    model = Invoice
+
+    def get_context_data(self,**kwargs):
+        context = super().get_context_data(**kwargs)
+        context["account"] = Account.objects.get(pk=self.kwargs["account_id"])
         return context
 @login_required(login_url=login_url)
 @login_required(login_url='contact_management:login')
@@ -364,5 +373,46 @@ def convert_lead(request,pk):
 
     return redirect('contact_management:contact_detail',args={"account_id":new_contact.account.id,"pk":new_contact.pk})
 
+@login_required(login_url=login_url)
+def sales_data(request):
+    context = {'years':range(2017,datetime.now().year+1),'items':Item.objects.all().order_by('item'),'months':range(1,13),}
+    return render(request,'contact_management/sales_data.html',context)
+
+def sales_by_year_chart(request):
+    sales = Sales()
+    dataset = [x['sales'] for x in sales.sales_by_year]
+    labels = [x['year'] for x in sales.sales_by_year]
+    chart_title = f"Sales By Year"
+    
+    return JsonResponse({'dataset':dataset,'labels':labels,'chart_title':chart_title,},safe=False)
+
+def sales_by_month_year_chart(request,year_id):
+    sales = Sales(year=year_id)
+    dataset = [x['sales'] for x in sales.year_sales]
+    labels = [x['month'] for x in sales.year_sales]
+    chart_title = f"Sales by Month for year: {year_id}"
+    print({'dataset':dataset,'labels':labels,'chart_title':chart_title,})
+    return JsonResponse({'dataset':dataset,'labels':labels,'chart_title':chart_title,},safe=False)
+
+def sales_by_month_chart(request,month_id):
+    sales = Sales(month=month_id)
+    dataset = [x['sales'] for x in sales.month_sales_by_year]
+    labels = [x['year'] for x in sales.month_sales_by_year]
+    chart_title = f"Sales by Year for year: {month_id}"
+    print({'dataset':dataset,'labels':labels,'chart_title':chart_title,})
+    return JsonResponse({'dataset':dataset,'labels':labels,'chart_title':chart_title,},safe=False)
+
+def sales_by_item_chart(request,item_id):
+    item = Item.objects.get(pk=item_id)
+    sales = Sales(item=item)
+    dataset = [x['sales'] for x in sales.sales_by_item_by_year]
+    labels = [x['year'] for x in sales.sales_by_item_by_year]
+    chart_title = f"Sales by Year for: {item}"
+    print({'dataset':dataset,'labels':labels,'chart_title':chart_title,})
+    return JsonResponse({'dataset':dataset,'labels':labels,'chart_title':chart_title,},safe=False)
+
+def email_data(request):
+    data = EmailData().data 
+    return JsonResponse(data.to_json(orient="index"),safe=False)
 
 

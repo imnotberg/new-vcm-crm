@@ -1,8 +1,9 @@
 from django.contrib.auth.models import User
 from django.db import models
+from django.db.models import JSONField
 from django.db.models.functions import ExtractWeek, ExtractYear, ExtractMonth,Concat
 from django.db.models.signals import post_save
-from django.contrib.postgres.fields import JSONField
+#from django.contrib.postgres.fields import JSONField
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.dispatch import receiver
@@ -75,6 +76,13 @@ class Account(models.Model):
 	@property
 	def all_notes(self):
 		return Note.objects.filter(Q(account=self)|Q(contact__account=self)).order_by('-date')
+	@property
+	def invoices(self):
+		return Invoice.objects.filter(account=self).order_by('-date')
+	@property
+	def sales(self):
+		return sum([x.total for x in self.invoices])
+	
 	@property 
 	def model(self):
 		return self._meta.verbose_name
@@ -268,13 +276,15 @@ class Note(models.Model):
 
 	def get_absolute_url(self):
 		return reverse('contact_management:note_detail',kwargs={'pk':self.pk})
-
+class Messages(models.Model):
+	data = JSONField(null=True,blank=True)
 class Invoice(models.Model):
 	account = models.ForeignKey('contact_management.Account',on_delete=models.CASCADE,null=True)
 	date = models.DateField(null=True)
 	number = models.IntegerField(null=True)
 	amount = models.FloatField(null=True)
 	rep = models.ForeignKey(User,on_delete=models.CASCADE,null=True)
+	total = models.FloatField(null=True)
 	class Meta:
 		ordering = ['-date']
 
@@ -283,10 +293,6 @@ class Invoice(models.Model):
 
 	def get_absoulte_url(self):
 		return reverse('contact_management:invoice_detail',kwargs={'account_id':self.account.id,'pk':self.pk})
-	@property
-	def total(self):
-		return sum([x.total for x in OrderItem.objects.filter(invoice=self) if x is not None])
-
 
 	
 
@@ -326,11 +332,10 @@ class OrderItem(models.Model):
 	price = models.FloatField()
 	description = models.CharField(max_length=1000,null=True,blank=True)
 	invoice = models.ForeignKey(Invoice,on_delete=models.CASCADE,related_name='invoice_for_order_item',null=True,blank=True)
+	total = models.FloatField(null=True)
 	def __str__(self):
 		return f"{self.order_item.item} {self.invoice.pk}"
-	@property
-	def total(self):
-		return self.price * self.quantity
+
 	
 class SendGridInfoData(models.Model):
 	data = PickledObjectField(null=True)
@@ -341,7 +346,15 @@ class Tag(models.Model):
 	def __str__(self):
 		return f"{self.name}"
 
+class EmailDataFull(models.Model):
+	data = JSONField()
 
+	def update_data(self):
+		pass
+class EmailData:
+	def __init__(self):
+		data = SendGridInfoData.objects.using('email').get(pk=1).data
+		self.data = data[data.email_source=='VCM']
 class EmailList:
 	pass
 
@@ -372,6 +385,20 @@ class SEO:
 				self.keywords = None
 		else:
 			self.info = df()
+
+class Sales:
+	def __init__(self,year=None,month=None,item=None):
+		if year == None:
+			year = datetime.now().year
+		if month == None:
+			month = datetime.now().month
+		self.sales_by_year = Invoice.objects.annotate(year=ExtractYear('date')).order_by('year').values('year').annotate(sales=Sum('total'))
+		self.year_sales = Invoice.objects.annotate(year=ExtractYear('date'),month=ExtractMonth('date')).order_by('year').filter(year=year).values('month').annotate(sales=Sum('total'))
+		self.month_sales = Invoice.objects.annotate(year=ExtractYear('date'),month=ExtractMonth('date')).order_by('year','month').filter(year=year,month=month).values('year','month').annotate(sales=Sum('total'))
+		self.month_sales_by_year = Invoice.objects.annotate(year=ExtractYear('date'),month=ExtractMonth('date')).order_by('year','month').filter(month=month).values('year').annotate(sales=Sum('total'))
+		self.sales_by_item = OrderItem.objects.order_by('order_item').values('order_item__item').annotate(sales=Sum('total')).values('order_item__item','sales').order_by('-sales')
+		self.sales_by_item_by_year = OrderItem.objects.filter(order_item=item).annotate(year=ExtractYear('invoice__date')).order_by('order_item','year').values('order_item__item','year').annotate(sales=Sum('total')).values('year','sales').order_by('year')
+
 
 
 #SIGNALS

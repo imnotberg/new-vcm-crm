@@ -90,12 +90,12 @@
                         </tr>
                       </thead>
                       <tbody>
-                      	{% for i in object.invoices.all %}
+                      	{% for i in object.invoices %}
                       		<tr>
                       			<td>{{i.date}}</td>
                       			<td>{{i.pk}}</td>                      			
-                      			<td>${{i.amount|floatformat:2|intcomma|default_if_none:"0"}}</td>
-                      			<td><a href="">DETAILS</a></td>
+                      			<td>${{i.total|floatformat:2|intcomma|default_if_none:"0"}}</td>
+                      			<td><a href="{% url 'contact_management:invoice_detail' account_id=object.pk pk=i.pk %}">DETAILS</a></td>
                       		</tr>
 
                       	{% endfor %}                       
@@ -105,9 +105,9 @@
                 </div>
               </div>
                      
-                    </div>
-                                        <div class="tab-pane fade" id="orders" role="tabpanel" aria-labelledby="orders-tab">
-                    	              <div class="card">
+            </div>
+            <div class="tab-pane fade" id="orders" role="tabpanel" aria-labelledby="orders-tab">
+              <div class="card">
                 <div class="card-body">
                 	<div class="d-flex justify-content-xl-between">
                   

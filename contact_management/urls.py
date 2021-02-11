@@ -22,13 +22,20 @@ urlpatterns = [
 	path('items',views.ItemListView.as_view(),name='item_list'),
 	path('item/<pk>/detail',views.ItemDetailView.as_view(),name='item_detail'),
 	path('invoices',views.InvoiceListView.as_view(),name='invoice_list'),
-	path('invoice/<pk>/detail',views.InvoiceDetailView.as_view(),name='invoice_detail'),
-	#path('leads/create',views.LeadCreateView.as_view(),name='leads_create'),
+	path('account/<account_id>/invoice/<pk>/detail',views.InvoiceDetailView.as_view(),name='invoice_detail'),
+	path('account/<account_id>/new-order',views.InvoiceCreateView.as_view(),name='new_order'),
+	path('sales-data',views.sales_data,name='sales_data'),
 	path('note-create/<form_data>',views.note_create,name='note_create'),
 	path('note-delete/<note_id>',views.note_delete,name='note_delete'),
 	path('add-contact/<form_data>',views.add_contact,name='add_contact'),
 	path('send-email-form/<form_data>',views.send_email_form,name='send_email_form'),
 	path('logout',views.logout_request,name='logout'),
 	path("login", views.login_request, name="login"),
-
+	#FEEDS
+	path('email-data',views.email_data,name='email_data'),
+	#CHARTS
+	path('sales-by-year-chart',views.sales_by_year_chart,name='sales_by_year_chart'),
+	path('sales-by-month-year-chart/year/<year_id>',views.sales_by_month_year_chart,name='sales_by_month_year_chart'),
+	path('sales-by-item-chart/item/<item_id>',views.sales_by_item_chart,name='sales_by_item_chart'),
+	path('sales-by-month-chart/month/<month_id>',views.sales_by_month_chart,name='sales_by_month_chart'),
 	] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

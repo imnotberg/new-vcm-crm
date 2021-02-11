@@ -1,7 +1,8 @@
 import django_tables2 as tables
 from django_tables2 import TemplateColumn
 from django_tables2.utils import A
-from .models import Account,Contact,Lead,Item,Invoice
+from .models import Account,Contact,Lead,Item,Invoice,OrderItem
+
 
 class AccountTable(tables.Table):
 	name = tables.LinkColumn('contact_management:account_detail',args=[A('pk')])
@@ -46,10 +47,29 @@ class ItemTable(tables.Table):
 		fields = ("item","description")
 
 class InvoiceTable(tables.Table):
-	account = tables.LinkColumn('contact_management:account_detail',args=[A('account__pk')])
+	total = tables.Column(footer=lambda table: sum([x.total for x in table.data]))
+
 	class Meta:
-		attrs:{"class":"table table-sm table-hover"}
+		attrs:{"class":"table table-hover"}
 		template_name = "django_tables2/bootstrap4.html"
-		model = Invoice
-		fields = ("account","date","total")
+		model = OrderItem 
+		fields = ("order_item","description","price","quantity","total")
+
+	def render_price(self,record,value):
+		try:
+			return "${:,.2f}".format(value)
+		except:
+			return value
+	def render_footer(self,record,value):
+		try:
+			return "${:,.2f}".format(value)
+		except:
+			return value
+	def render_total(self,record,value):
+		try:
+			return "${:,.2f}".format(value)
+		except:
+			return value
+
+
 

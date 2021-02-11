@@ -1,0 +1,251 @@
+{% extends 'contact_management/base.html' %}
+{% load bootstrap4 %}
+{% load extras %}
+
+{% block content %}
+<div class="content-wrapper">
+	<div class="row">
+		<div class="col-sm-4">
+			<div class="card">
+				<div class="card-body">
+					<div class="card-title">SALES PARAMETERS</div>
+					<div class="d-flex flex-row justify-content-center">
+						<div class="p-2">
+							<div class="card-title">By Year</div>
+						</div>
+					</div>
+					<div class="d-flex flex-row justify-content-center">
+						{% for year in years %}
+						<div class="p-2">
+							<button class="btn btn-small btn-primary" onclick="salesByYear('{{ year }}')">{{year}}</button>
+						</div>
+						{% endfor %}
+					</div>
+					<hr>
+					<div class="d-flex flex-row justify-content-center">
+						<div class="p-2">
+							<div class="card-title">By Month</div>
+						</div>
+					</div>
+					<div class="row">
+
+						{% for month in months %}
+						<div class="col-sm-3">
+							<button class="btn btn-small btn-primary" onclick="salesByMonth('{{ month }}')">{{month|monthify}}</button>
+						</div>
+						{% endfor %}
+					</div>
+					<hr>
+					<div class="d-flex flex-row justify-content-center">
+						<div class="p-2">
+							<div class="card-title">by service</div>
+						</div>
+					</div>
+					<div class="d-flex flex-row justify-content-center">
+						<div class="p-2">
+							<div class="dropdown columns">
+								<button class="btn btn-primary dropdown-toggle" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+								Pick Service
+								</button>
+								<div class="dropdown-menu" aria-labelledby="dropdownMenuButton">
+								{% for i in items %}
+								<a class="dropdown-item" onclick="salesByItem('{{i.pk}}')">{{i}}</a>
+								{% endfor %}
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="col-sm-8">
+			<div class="card">
+				<div class="card-body" id="chart-container">
+					<div class="card-title">DATA</div>
+					<canvas id="myChart" height="200"></canvas>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+<script>
+ var endpoint = "{% url 'contact_management:sales_by_year_chart'%}"
+ var dataset = []
+ var labels = []
+ var chart_title = ''
+$.ajax({
+	method: "GET",
+	url: endpoint,
+	success: function(data){
+	    labels = data.labels
+	    dataset = data.dataset
+	    label = data.chart_title
+	    var ctx = document.getElementById('myChart').getContext('2d');
+	    ctx.height = 50;
+
+var myChart = new Chart(ctx, {
+    type: 'bar',
+    fill: false,
+    data: {
+        labels: labels,
+        datasets: [{
+        	backgroundColor: ["red", "blue", "green", "blue", "red", "blue"],
+	        barPercentage: 0.9,
+	        barThickness: 600,
+	        maxBarThickness: 80,
+	        minBarLength: 2,
+            label: label,
+            data: dataset,}]}})           
+            
+        },
+        error: function(data){
+            console.log(error_data)
+        }
+    })
+console.log(myChart);
+function salesByYear(year){
+	var newEndpoint = "{% url 'contact_management:sales_by_month_year_chart' 2021 %}".replace(/2021/,year.toString());
+	console.log(newEndpoint);
+	fetch(newEndpoint, {		      
+		    }).then(function(response) {
+		      return response.json();
+		    }).then(function(data) {
+		    	var cctx = document.getElementById("myChart");
+		    	cctx.remove();
+		    	var newTitle = data["chart_title"];
+		    	var newLabels = data["labels"];
+		    	var newDataSet = data["dataset"];
+		    	console.log(data["chart_title"]);
+		    	$('#chart-container').append('<canvas id="myChart"></canvas>');
+		    	let nctx = document.getElementById("myChart");
+		    	var newChart = new Chart(nctx,{
+		    		type:'bar',
+		    		data: {
+				        labels: newLabels,
+				        datasets: [{
+				        	backgroundColor: ["red", "blue", "green", "blue", "red", "blue"],
+					        barPercentage: 0.9,
+					        barThickness: 600,
+					        maxBarThickness: 80,
+					        minBarLength: 2,
+				            label: newTitle,
+				            data: newDataSet,}]}
+
+				})
+
+		    	console.log(data.chart_title);
+		    })
+	
+	
+	var newDataset = []
+	var newLabels = []
+	var newChartTitle = ''
+	
+	
+	
+	let nctx = document.getElementById("myChart");
+	var newChart = new Chart(nctx,{
+
+
+	})
+
+		}
+
+function salesByMonth(month){
+	var newEndpoint = "{% url 'contact_management:sales_by_month_chart' 2021 %}".replace(/2021/,month.toString());
+	console.log(newEndpoint);
+	fetch(newEndpoint, {		      
+		    }).then(function(response) {
+		      return response.json();
+		    }).then(function(data) {
+		    	var cctx = document.getElementById("myChart");
+		    	cctx.remove();
+		    	var newTitle = data["chart_title"];
+		    	var newLabels = data["labels"];
+		    	var newDataSet = data["dataset"];
+		    	console.log(data["chart_title"]);
+		    	$('#chart-container').append('<canvas id="myChart"></canvas>');
+		    	let nctx = document.getElementById("myChart");
+		    	var newChart = new Chart(nctx,{
+		    		type:'bar',
+		    		data: {
+				        labels: newLabels,
+				        datasets: [{
+				        	backgroundColor: ["red", "blue", "green", "blue", "red", "blue"],
+					        barPercentage: 0.9,
+					        barThickness: 600,
+					        maxBarThickness: 80,
+					        minBarLength: 2,
+				            label: newTitle,
+				            data: newDataSet,}]}
+
+				})
+
+		    	console.log(data.chart_title);
+		    })
+	
+	
+	var newDataset = []
+	var newLabels = []
+	var newChartTitle = ''
+	
+	
+	
+	let nctx = document.getElementById("myChart");
+	var newChart = new Chart(nctx,{
+
+
+	})
+
+		}
+function salesByItem(item){
+	var newEndpoint = "{% url 'contact_management:sales_by_item_chart' 2021 %}".replace(/2021/,item.toString());
+	console.log(newEndpoint);
+	fetch(newEndpoint, {		      
+		    }).then(function(response) {
+		      return response.json();
+		    }).then(function(data) {
+		    	var cctx = document.getElementById("myChart");
+		    	cctx.remove();
+		    	var newTitle = data["chart_title"];
+		    	var newLabels = data["labels"];
+		    	var newDataSet = data["dataset"];
+		    	console.log(data["chart_title"]);
+		    	$('#chart-container').append('<canvas id="myChart"></canvas>');
+		    	let nctx = document.getElementById("myChart");
+		    	var newChart = new Chart(nctx,{
+		    		type:'bar',
+		    		data: {
+				        labels: newLabels,
+				        datasets: [{
+				        	backgroundColor: ["red", "blue", "green", "blue", "red", "blue"],
+					        barPercentage: 0.9,
+					        barThickness: 600,
+					        maxBarThickness: 80,
+					        minBarLength: 2,
+				            label: newTitle,
+				            data: newDataSet,}]}
+
+				})
+
+		    	console.log(data.chart_title);
+		    })
+	
+	
+	var newDataset = []
+	var newLabels = []
+	var newChartTitle = ''
+	
+	
+	
+	let nctx = document.getElementById("myChart");
+	var newChart = new Chart(nctx,{
+
+
+	})
+
+		}
+
+
+</script>
+{% endblock %}
