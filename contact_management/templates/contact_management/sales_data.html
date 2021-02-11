@@ -31,7 +31,7 @@
 
 						{% for month in months %}
 						<div class="col-sm-3">
-							<button class="btn btn-small btn-primary" onclick="salesByMonth('{{ month }}')">{{month|monthify}}</button>
+							<button class="btn btn-small btn-primary btn-block" onclick="salesByMonth('{{ month }}')">{{month|monthify}}</button>
 						</div>
 						{% endfor %}
 					</div>
@@ -59,10 +59,35 @@
 			</div>
 		</div>
 		<div class="col-sm-8">
-			<div class="card">
-				<div class="card-body" id="chart-container">
-					<div class="card-title">DATA</div>
-					<canvas id="myChart" height="200"></canvas>
+			<div class="row">
+				<div class="col-sm-7">
+					<div class="card">
+						<div class="card-body" id="chart-container">
+							<div class="card-title">CHART</div>
+							<canvas id="myChart" height="200"></canvas>
+						</div>
+					</div>
+				</div>
+				<div class="col-sm-5">
+					<div class="card">
+						<div class="card-body" id="table-card">
+							<div class="card-title" id="table-title">ACCOUNT SALES</div>
+							<div class="table-responsive" id="table-div">
+								<table class="table table-hover" id="data-table">
+									<thead>
+										<tr>
+											<th>ID</th>
+											<th>COMPANY</th>
+											<th>SALES</th>
+										</tr>
+									</thead>
+									<tbody id="data-table-body">
+										
+									</tbody>
+								</table>
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -73,7 +98,7 @@
  var dataset = []
  var labels = []
  var chart_title = ''
-$.ajax({
+ $.ajax({
 	method: "GET",
 	url: endpoint,
 	success: function(data){
@@ -82,6 +107,19 @@ $.ajax({
 	    label = data.chart_title
 	    var ctx = document.getElementById('myChart').getContext('2d');
 	    ctx.height = 50;
+	    var tableInfo = data["table_info"];	    
+	    var i;
+	    for(i=0;i<tableInfo.length;i++){
+	    	var accountUrl = "{% url 'contact_management:account_detail' 920 %}".replace(/920/,tableInfo[i]["account__id"].toString());	    	
+	    	$('#data-table tbody').append(
+	    		`<tr>
+	    			<td><a href="${accountUrl||""}">${tableInfo[i]["account__id"]||""}</a></td>
+	    			<td><a href="${accountUrl||""}">${tableInfo[i]["account__name"]||""}</a></td>
+	    			<td>$${tableInfo[i]["sales"]||""}</td>
+	    		</tr>`
+	    		)
+	    }
+
 
 var myChart = new Chart(ctx, {
     type: 'bar',
@@ -102,21 +140,38 @@ var myChart = new Chart(ctx, {
             console.log(error_data)
         }
     })
-console.log(myChart);
+
 function salesByYear(year){
 	var newEndpoint = "{% url 'contact_management:sales_by_month_year_chart' 2021 %}".replace(/2021/,year.toString());
-	console.log(newEndpoint);
+	
 	fetch(newEndpoint, {		      
 		    }).then(function(response) {
 		      return response.json();
 		    }).then(function(data) {
 		    	var cctx = document.getElementById("myChart");
+		    	var ctable = document.getElementById("data-table-body");
 		    	cctx.remove();
+		    	ctable.remove();
 		    	var newTitle = data["chart_title"];
 		    	var newLabels = data["labels"];
-		    	var newDataSet = data["dataset"];
-		    	console.log(data["chart_title"]);
+		    	var newDataSet = data["dataset"];		    	
 		    	$('#chart-container').append('<canvas id="myChart"></canvas>');
+		    	$('#data-table').append('<tbody id="data-table-body"></tbody>');
+		    	var tableInfo = data["table_info"];
+			    
+			    var i;
+			    for(i=0;i<tableInfo.length;i++){
+			    	var accountUrl = "{% url 'contact_management:account_detail' 920 %}".replace(/920/,tableInfo[i]["account__id"].toString());
+			    	
+			    	$('#data-table tbody').append(
+			    		`<tr>
+			    			<td><a href="${accountUrl||""}">${tableInfo[i]["account__id"]||""}</a></td>
+			    			<td><a href="${accountUrl||""}">${tableInfo[i]["account__name"]||""}</a></td>
+			    			<td>$${tableInfo[i]["sales"]||""}</td>
+			    		</tr>`
+
+			    		)
+			    }
 		    	let nctx = document.getElementById("myChart");
 		    	var newChart = new Chart(nctx,{
 		    		type:'bar',
@@ -133,7 +188,7 @@ function salesByYear(year){
 
 				})
 
-		    	console.log(data.chart_title);
+		    	
 		    })
 	
 	
@@ -153,18 +208,34 @@ function salesByYear(year){
 
 function salesByMonth(month){
 	var newEndpoint = "{% url 'contact_management:sales_by_month_chart' 2021 %}".replace(/2021/,month.toString());
-	console.log(newEndpoint);
+	
 	fetch(newEndpoint, {		      
 		    }).then(function(response) {
 		      return response.json();
 		    }).then(function(data) {
 		    	var cctx = document.getElementById("myChart");
+		    	var ctable = document.getElementById("data-table-body");
 		    	cctx.remove();
+		    	ctable.remove();
 		    	var newTitle = data["chart_title"];
 		    	var newLabels = data["labels"];
-		    	var newDataSet = data["dataset"];
-		    	console.log(data["chart_title"]);
+		    	var newDataSet = data["dataset"];		    	
 		    	$('#chart-container').append('<canvas id="myChart"></canvas>');
+		    	$('#data-table').append('<tbody id="data-table-body"></tbody>');
+		    	var tableInfo = data["table_info"];			    
+			    var i;
+			    for(i=0;i<tableInfo.length;i++){
+			    	var accountUrl = "{% url 'contact_management:account_detail' 920 %}".replace(/920/,tableInfo[i]["account__id"].toString());
+			    	
+			    	$('#data-table tbody').append(
+			    		`<tr>
+			    			<td><a href="${accountUrl||""}">${tableInfo[i]["account__id"]||""}</a></td>
+			    			<td><a href="${accountUrl||""}">${tableInfo[i]["account__name"]||""}</a></td>
+			    			<td>$${tableInfo[i]["sales"]||""}</td>
+			    		</tr>`
+
+			    		)
+			    }
 		    	let nctx = document.getElementById("myChart");
 		    	var newChart = new Chart(nctx,{
 		    		type:'bar',
@@ -181,7 +252,7 @@ function salesByMonth(month){
 
 				})
 
-		    	console.log(data.chart_title);
+		    	
 		    })
 	
 	
@@ -200,18 +271,35 @@ function salesByMonth(month){
 		}
 function salesByItem(item){
 	var newEndpoint = "{% url 'contact_management:sales_by_item_chart' 2021 %}".replace(/2021/,item.toString());
-	console.log(newEndpoint);
+	
 	fetch(newEndpoint, {		      
 		    }).then(function(response) {
 		      return response.json();
 		    }).then(function(data) {
 		    	var cctx = document.getElementById("myChart");
+		    	var ctable = document.getElementById("data-table-body");
 		    	cctx.remove();
+		    	ctable.remove();
 		    	var newTitle = data["chart_title"];
 		    	var newLabels = data["labels"];
-		    	var newDataSet = data["dataset"];
-		    	console.log(data["chart_title"]);
+		    	var newDataSet = data["dataset"];		    	
 		    	$('#chart-container').append('<canvas id="myChart"></canvas>');
+		    	$('#data-table').append('<tbody id="data-table-body"></tbody>');
+		    	var tableInfo = data["table_info"];			    
+			    var i;
+			    for(i=0;i<tableInfo.length;i++){
+			    	var accountUrl = "{% url 'contact_management:account_detail' 920 %}".replace(/920/,tableInfo[i]["account__id"].toString());
+			    	
+			    	$('#data-table tbody').append(
+			    		`<tr>
+			    			<td><a href="${accountUrl||""}">${tableInfo[i]["account__id"]||""}</a></td>
+			    			<td><a href="${accountUrl||""}">${tableInfo[i]["account__name"]||""}</a></td>
+			    			<td>$${tableInfo[i]["sales"]||""}</td>
+			    		</tr>`
+
+			    		)
+			    }
+
 		    	let nctx = document.getElementById("myChart");
 		    	var newChart = new Chart(nctx,{
 		    		type:'bar',
@@ -228,7 +316,7 @@ function salesByItem(item){
 
 				})
 
-		    	console.log(data.chart_title);
+		    	
 		    })
 	
 	

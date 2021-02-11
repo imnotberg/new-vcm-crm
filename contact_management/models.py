@@ -387,29 +387,29 @@ class SEO:
 			self.info = df()
 
 class Sales:
-	def __init__(self,year=None,month=None,item=None):
+	def __init__(self,year=None,month=None,item=None,account=None):
 		if year == None:
 			year = datetime.now().year
 		if month == None:
 			month = datetime.now().month
 		self.sales_by_year = Invoice.objects.annotate(year=ExtractYear('date')).order_by('year').values('year').annotate(sales=Sum('total'))
+		self.sales_by_account = Invoice.objects.order_by('account').values('account__id','account__name').annotate(sales=Sum('total')).order_by('-sales')
+		self.sales_by_account_year = Invoice.objects.annotate(year=ExtractYear('date')).filter(year=year).order_by('account').values('account__id','account__name').annotate(sales=Sum('total')).order_by('-sales')
 		self.year_sales = Invoice.objects.annotate(year=ExtractYear('date'),month=ExtractMonth('date')).order_by('year').filter(year=year).values('month').annotate(sales=Sum('total'))
 		self.month_sales = Invoice.objects.annotate(year=ExtractYear('date'),month=ExtractMonth('date')).order_by('year','month').filter(year=year,month=month).values('year','month').annotate(sales=Sum('total'))
 		self.month_sales_by_year = Invoice.objects.annotate(year=ExtractYear('date'),month=ExtractMonth('date')).order_by('year','month').filter(month=month).values('year').annotate(sales=Sum('total'))
+		self.month_sales_by_year_account = Invoice.objects.annotate(month=ExtractMonth('date')).filter(month=month).order_by('account').values('account__id','account__name').annotate(sales=Sum('total')).order_by('-sales')
 		self.sales_by_item = OrderItem.objects.order_by('order_item').values('order_item__item').annotate(sales=Sum('total')).values('order_item__item','sales').order_by('-sales')
 		self.sales_by_item_by_year = OrderItem.objects.filter(order_item=item).annotate(year=ExtractYear('invoice__date')).order_by('order_item','year').values('order_item__item','year').annotate(sales=Sum('total')).values('year','sales').order_by('year')
+		self.sales_by_item_by_account = OrderItem.objects.filter(order_item=item).order_by('invoice__account').values('invoice__account__id','invoice__account__name').annotate(sales=Sum('total')).order_by('-sales')
+		self.sales_by_customer = Invoice.objects.filter(account=account)
 
 
 
 #SIGNALS
 @receiver(post_save, sender=Note)
 def note_follow_up_date(sender, instance, **kwargs):
-	print(instance.follow_up_date,'INSTANE')
 	if instance.account is not None and instance.follow_up_date is not None:
-		print('this is an account!')
-		print(instance.follow_up_date,instance.account.follow_up_date,'pre')
-		instance.account.follow_up_date = instance.follow_up_date
-		print(instance.follow_up_date,instance.account.follow_up_date,'post')
 		instance.account.save()
 		print('saved account!')
 	elif instance.contact is not None and instance.follow_up_date is not None:
@@ -418,14 +418,12 @@ def note_follow_up_date(sender, instance, **kwargs):
 	elif instance.lead is not None and instance.follow_up_date is not None:
 		instance.lead.follow_up_date = instance.follow_up_date
 		instance.lead.save()
-@receiver(post_save,sender=SendGridInfoData)
-def let_me_know(sender,instance,**kwargs):
-	print('we just saved something')
-	print(instance)
+@receiver(post_save,sender=Messages)
+def messages_update(sender,instance,**kwargs):
+	print("vcm messages saved")
 @receiver(tracking)
 def handle_bounce(sender, event, esp_name, **kwargs):
-	def pandafy(event):
-		print('event happened!',event)
+	def pandafy(event):		
 		info = {k:v for k,v in event.__dict__.items() if k!='esp_event' and k!='metadata'}
 		for k,v in event.__dict__['esp_event'].items():
 			info[k]=v

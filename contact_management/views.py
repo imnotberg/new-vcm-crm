@@ -300,7 +300,7 @@ def send_email_form(request,form_data):
     #send_email(self,subject=None,body=None,sg_template_on=False,sg_template=None,template=None,campaign=None):
     if request.is_ajax and request.method == 'POST':
         jform = json.loads(form_data)
-        print(jform)
+        print(jform,'this is jform')
         contacts = Contact.objects.filter(pk__in=[v for k,v in jform.items() if 'contact-checkbox' in k])
         leads = Lead.objects.filter(pk__in=[v for k,v in jform.items() if 'lead-checkbox' in k])
         subject = jform.get("subject",None)
@@ -313,11 +313,12 @@ def send_email_form(request,form_data):
         if template is not None:
             body = None
         if sg_template_on == True:
-            template = sg_template
-        
+            template = sg_template        
         for c in contacts:
+            print('we sending to contacts')
             #c.send_email(subject,body,self.sg_template_on,sg_template,template,self.id)
             c.send_email(subject,body,sg_template_on,sg_template,template,campaign=None)
+            print('we sent to contacts')
         for l in leads:
             l.send_email(subject,body,sg_template_on,sg_template,template,campaign=None)
        
@@ -382,34 +383,38 @@ def sales_by_year_chart(request):
     sales = Sales()
     dataset = [x['sales'] for x in sales.sales_by_year]
     labels = [x['year'] for x in sales.sales_by_year]
+    table_info = [{"account__id":x['account__id'],"account__name":x['account__name'],"sales":x["sales"]} for x in sales.sales_by_account]
     chart_title = f"Sales By Year"
-    
-    return JsonResponse({'dataset':dataset,'labels':labels,'chart_title':chart_title,},safe=False)
+    table_title = f"Sales by Account"    
+    return JsonResponse({'dataset':dataset,'labels':labels,'chart_title':chart_title,"table_info":table_info,},safe=False)
 
 def sales_by_month_year_chart(request,year_id):
     sales = Sales(year=year_id)
     dataset = [x['sales'] for x in sales.year_sales]
     labels = [x['month'] for x in sales.year_sales]
+    table_info = [{"account__id":x['account__id'],"account__name":x['account__name'],"sales":x["sales"]} for x in sales.sales_by_account_year]
+    table_title = f"Account Sales for {year_id}"
     chart_title = f"Sales by Month for year: {year_id}"
-    print({'dataset':dataset,'labels':labels,'chart_title':chart_title,})
-    return JsonResponse({'dataset':dataset,'labels':labels,'chart_title':chart_title,},safe=False)
+    return JsonResponse({'dataset':dataset,'labels':labels,'chart_title':chart_title,"table_info":table_info,"table_title":table_title,},safe=False)
 
 def sales_by_month_chart(request,month_id):
     sales = Sales(month=month_id)
     dataset = [x['sales'] for x in sales.month_sales_by_year]
     labels = [x['year'] for x in sales.month_sales_by_year]
+    table_info = [{"account__id":x['account__id'],"account__name":x['account__name'],"sales":x["sales"]} for x in sales.month_sales_by_year_account]
+    table_title = f"Account Sales for {month_id}"
     chart_title = f"Sales by Year for year: {month_id}"
-    print({'dataset':dataset,'labels':labels,'chart_title':chart_title,})
-    return JsonResponse({'dataset':dataset,'labels':labels,'chart_title':chart_title,},safe=False)
+    return JsonResponse({'dataset':dataset,'labels':labels,'chart_title':chart_title,"table_info":table_info,"table_title":table_title,},safe=False)
 
 def sales_by_item_chart(request,item_id):
     item = Item.objects.get(pk=item_id)
     sales = Sales(item=item)
     dataset = [x['sales'] for x in sales.sales_by_item_by_year]
     labels = [x['year'] for x in sales.sales_by_item_by_year]
+    table_info = [{"account__id":x['invoice__account__id'],"account__name":x['invoice__account__name'],"sales":x["sales"]} for x in sales.sales_by_item_by_account]
+    table_title = f"Account Sales for {item}"
     chart_title = f"Sales by Year for: {item}"
-    print({'dataset':dataset,'labels':labels,'chart_title':chart_title,})
-    return JsonResponse({'dataset':dataset,'labels':labels,'chart_title':chart_title,},safe=False)
+    return JsonResponse({'dataset':dataset,'labels':labels,'chart_title':chart_title,"table_info":table_info,"table_title":table_title,},safe=False)
 
 def email_data(request):
     data = EmailData().data 
