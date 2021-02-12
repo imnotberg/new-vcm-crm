@@ -143,15 +143,18 @@ class Contact(models.Model):
 			message.attach_alternative(html_content,"text/html")
 		message.track_clicks = True
 		message.track_opens = True
-		message.send()
-		status = message.anymail_status
-		status.message_id
-		print(status.message_id,'MID!!')
+		try:
+			message.send()
+			status = message.anymail_status
+			status.message_id
+			print(status.message_id,'MID!!')
 
-		n = Note(contact=self,date=datetime.now(),note=note,follow_up_date=datetime.now()+timedelta(days=14),contact_type='EMAIL')
-		print(n,'NOTE')
-		n.save()
-		print(n.follow_up_date,'NOTE SAVED')
+			n = Note(contact=self,date=datetime.now(),note=note,follow_up_date=datetime.now()+timedelta(days=14),contact_type='EMAIL')
+			print(n,'NOTE')
+			n.save()
+			print(n.follow_up_date,'NOTE SAVED')
+		except:
+			print('message did not send to',self)
 class Lead(models.Model):
 	title = models.CharField(pgettext_lazy("Treatment Pronouns for the customer", "Title"), max_length=64,null=True)
 	first_name = models.CharField(_("First name"), null=True, max_length=255)
@@ -242,12 +245,15 @@ class Lead(models.Model):
 			message.attach_alternative(html_content,"text/html")
 		message.track_clicks = True
 		message.track_opens = True
-		message.send()
-		status = message.anymail_status
-		status.message_id
-		n = Note(lead=self,date=datetime.now(),note=note,follow_up_date=datetime.now() + timedelta(days=14),contact_type='EMAIL')
-		n.save()
-		print(f"email sent to {self}")
+		try:
+			message.send()
+			status = message.anymail_status
+			status.message_id
+			n = Note(lead=self,date=datetime.now(),note=note,follow_up_date=datetime.now() + timedelta(days=14),contact_type='EMAIL')
+			n.save()
+			print(f"email sent to {self}")
+		except:
+			print('message did not send to',self)
 	
 
 class Item(models.Model):
