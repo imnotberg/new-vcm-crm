@@ -2,6 +2,14 @@ from django import forms
 from django.forms import ModelForm
 from contact_management.models import *
 
+class AccountModalForm(ModelForm):
+	class Meta:
+		model = Account
+		fields = '__all__'
+	def __init__(self, *args, **kwargs):
+		super(AccountModalForm, self).__init__(*args, **kwargs)
+		for field in self.fields:
+			self.fields[field].required = False
 class NoteForm(ModelForm):
 	#user_choices = [(u.username,u.username) for u  in User.objects.all()]
 	#user_choices.insert(0,(None,''))

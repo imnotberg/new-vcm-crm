@@ -4,7 +4,33 @@ from django.contrib import admin
 from django.urls import include,path
 from . import views
 app_name = 'contact_management'
+
 urlpatterns = [
+	#PAGES
+	path('test',views.test,name='test'),
+	path('accounts',views.accounts,name='accounts'),
+	#FEEDS
+	path('accounts-feed',views.accounts_feed,name='accounts_feed'),
+	path('accounts-search/query/<query>',views.accounts_search,name='accounts_search'),
+	path('account-feed/account-id/<account_id>',views.account_feed,name='account_feed'),
+	#CBV
+	path('accounts/<pk>/detail/',views.AccountDetailView.as_view(),name='account_detail'),
+	path('contacts/account/<account_id>/contact/<pk>/detail',views.ContactDetailView.as_view(),name='contact_detail'),
+	path('account/<account_id>/invoice/<pk>/detail',views.InvoiceDetailView.as_view(),name='invoice_detail'),
+	#ACTIONS
+	path('accounts/<account_id>/contact/<contact_id>/make-primary',views.make_primary_contact,name='make_primary_contact'),
+	path('contacts/<contact_id>/remove',views.remove_contact,name='remove_contact'),
+	#OLD
+	path('accounts/<pk>/update',views.AccountUpdateView.as_view(),name='account_update'),
+	#FORM URLS
+	path('note-create/<form_data>',views.note_create,name='note_create'),
+	path('send-email-form/<form_data>',views.send_email_form,name='send_email_form'),
+	path('add-contact/<form_data>',views.add_contact,name='add_contact'),
+	#TABLES
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+'''
+urlpatterns = [
+	
 	path('',views.index,name='index'),
 	path('accounts',views.AccountListView.as_view(),name='account_list'),
 	path('accounts/<pk>/detail/',views.AccountDetailView.as_view(),name='account_detail'),
@@ -39,3 +65,4 @@ urlpatterns = [
 	path('sales-by-item-chart/item/<item_id>',views.sales_by_item_chart,name='sales_by_item_chart'),
 	path('sales-by-month-chart/month/<month_id>',views.sales_by_month_chart,name='sales_by_month_chart'),
 	] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+'''

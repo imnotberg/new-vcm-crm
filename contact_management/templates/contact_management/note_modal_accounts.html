@@ -1,0 +1,79 @@
+{% load bootstrap4 %}
+
+<div class="modal fade" id="exampleModalCenter" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+	<form method="post" id="note-form">
+		{% csrf_token %}
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="exampleModalLongTitle">New Note</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        {% bootstrap_form note_form %}
+        
+       
+      </div>
+      <div class="modal-footer">
+        <input type="hidden" name="note_type" value="ACCOUNT">
+        <input type="hidden" name="account_id" value="{{object.pk}}">
+       <input class="btn btn-primary" type="submit" value="Save" />
+       
+      </div>
+    </div>
+  </div>
+</form>
+</div>
+
+
+<script type="text/javascript">
+
+ function createNote(form){
+    let csrfValue = document.getElementsByName("csrfmiddlewaretoken")[0].value;
+    fetch("{% url 'contact_management:note_create' 'xxxxxxxx' %}".replace('xxxxxxxx',form.toString()),{method:"Post",headers:{"X-CSRFToken": csrfValue,"X-Requested-With": "XMLHttpRequest"}}
+            ).then(function(response) {
+          return response.json();
+        }).then(function(data) {            
+            let info = data;
+            let newNote = JSON.parse(info["new_note"])[0];
+            console.log(newNote["fields"]["note"]);
+            let contact_date = new Date(Date.parse(newNote["fields"]["date"]));
+            let follow_up_date = new Date(Date.parse(newNote["fields"]["follow_up_date"]));
+
+            console.log(contact_date.toLocaleDateString());
+            $("#notes-table tbody").prepend(
+              `
+                <tr>
+                  <td>${contact_date.toLocaleDateString()||""}</td>
+                  <td>ACCOUNT</td>
+                  <td>${newNote["fields"]["contact_type"]||""}</td>
+                  <td>${newNote["fields"]["note"]||""}</td>
+                  <td>${follow_up_date.toLocaleDateString()||""}</td>
+                  <td>${newNote["fields"]["user"]||""}</td>
+                  <td>DELETE</td>
+                </tr>
+              `
+              )
+        }
+
+        )
+        $('#exampleModalCenter').modal('hide')
+          }
+
+$('#note-form').on('submit', function(event){
+    event.preventDefault();
+    console.log("form submitted!")  // sanity check
+    let form = $('#note-form').serialize();
+    let formData = $('#note-form').serializeArray();
+    
+    console.log(formData["account_id"]);    
+    var json_text = JSON.stringify(formData, null, 2);    
+    let json_obj = JSON.parse(json_text);
+    let dictionary = Object.assign({}, ...formData.map((x) => ({[x.name]: x.value})));
+    dictionary["account_id"]=selectedAccountId;
+    console.log(JSON.stringify(dictionary));
+    createNote(JSON.stringify(dictionary));
+});
+</script>

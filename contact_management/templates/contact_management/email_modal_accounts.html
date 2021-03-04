@@ -1,0 +1,76 @@
+ {% load bootstrap4 %}
+ <div class="modal fade" id="emailFormModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalCenterTitle" aria-hidden="true">
+  <form method="post" id="email-form">
+      {% csrf_token %}
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLongTitle">Email Contacts for {{object}}</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body" id="modal-body">        
+        	<div class="row">
+        		<h4>Choose contacts you'd like to email.</h4>
+        	</div>
+        	
+         
+          <div class="form-check" id="contacts-form-check">
+  			<input class="form-check-input" type="checkbox" id="inlineCheckbox{{c.pk}}" name="{{c.model}}-checkbox-{{c.pk}}" value="{{c.pk}}">
+        <input type="hidden" name="model_type{{c.pk}}" value="{{c.model}}">
+  			<label class="form-check-label" for="inlineCheckbox{{c.pk}}">{{c.full_name}}: {{c.email}}</label>
+			</div>
+			
+      
+          {% bootstrap_field email_form.subject %}
+            {% bootstrap_field email_form.body %}
+             {% bootstrap_field email_form.template %}
+              {% bootstrap_field email_form.sg_template_on %}
+               {% bootstrap_field email_form.sg_template %} 
+        {% if object.model != 'account' %}         
+        <input type="hidden" name="{{object.model}}-checkbox-{{object.pk}}" value="{{object.pk}}">
+        {% endif %}
+        </div>
+        <div class="modal-footer">
+         <input class="btn btn-primary" type="submit" value="Send" />
+         
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
+<script type="text/javascript">
+function sendEmail(form){
+    let csrfValue = document.getElementsByName("csrfmiddlewaretoken")[0].value;
+    fetch("{% url 'contact_management:send_email_form' 'xxxxxxxx' %}".replace('xxxxxxxx',form.toString()),{method:"Post",headers:{"X-CSRFToken": csrfValue,"X-Requested-With": "XMLHttpRequest"}}
+            ).then(function(response) {
+          return response.json();
+        }).then(function(data) {            
+            //let info = data;
+            //let newContact = JSON.parse(info["new_contact"])[0];
+            //console.log(newContact);
+            console.log('check the logs')
+            
+        }
+
+        )
+        $('#emailFormModal').modal('hide')
+          }
+$('#email-form').on('submit', function(event){
+    event.preventDefault();
+    console.log("form submitted!")  // sanity check
+    let form = $('#email-form').serialize();
+    console.log(form);
+    let formData = $('#email-form').serializeArray();    
+    var json_text = JSON.stringify(formData, null, 2);    
+    let json_obj = JSON.parse(json_text);
+    let dictionary = Object.assign({}, ...formData.map((x) => ({[x.name]: x.value})));
+    dictionary["account_id"]=selectedAccountId;
+    console.log(dictionary);
+    console.log('this is how we do it');
+    console.log(JSON.stringify(dictionary));
+    sendEmail(JSON.stringify(dictionary));
+    
+});
+</script>

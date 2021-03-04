@@ -86,6 +86,10 @@ class Account(models.Model):
 	@property 
 	def model(self):
 		return self._meta.verbose_name
+	@property
+	def notes(self):
+		return Note.objects.filter(Q(account=self))
+	
 	
 	
 class Contact(models.Model):
@@ -138,7 +142,8 @@ class Contact(models.Model):
 			template = sg_template
 			note = f"SENDGRID TEMPLATE {sg_template}"		
 
-		message.metadata = {"account_id":self.account.id,"contact_id":self.id,"template":template,"campaign":campaign,"email_source":"VCM"}
+		message.metadata = {"account_id":self.account.id,"contact_id":self.id,"template":template,"campaign":campaign,"email_source":"VCM","contact_type":"CONTACT","FIRST_NAME":self.first_name,"LAST_NAME":self.last_name,"ACCOUNT_NAME":self.account.name,'DATETIME':datetime.now().isoformat(),}
+
 		if html_content is not None:
 			message.attach_alternative(html_content,"text/html")
 		message.track_clicks = True
@@ -240,7 +245,7 @@ class Lead(models.Model):
 		if sg_template_on == True:					
 			message.template_id = sg_template
 			template = sg_template	
-		message.metadata = {"account_id":self.account_name,"contact_id":self.id,"template":template,"campaign":campaign,"email_source":"VCM",}
+		message.metadata = {"account_id":self.account_name,"contact_id":self.id,"template":template,"campaign":campaign,"email_source":"VCM","contact_type":"LEAD","FIRST_NAME":self.first_name,"LAST_NAME":self.last_name,"ACCOUNT_NAME":self.account_name,'DATETIME':datetime.now().isoformat()}
 		if html_content is not None:
 			message.attach_alternative(html_content,"text/html")
 		message.track_clicks = True
@@ -345,6 +350,15 @@ class OrderItem(models.Model):
 	
 class SendGridInfoData(models.Model):
 	data = PickledObjectField(null=True)
+
+	@property
+	def messages(self):
+		return self.data
+
+	def stats(self,sample):
+		data = sample
+		stats = df({'SENT':[len(data)],'DELIVERED':[data.DELIVERED.sum()],"OPENED":[data.OPENED.sum()],"CLICKED":[data.CLICKED.sum()],"UNSUBSCRIBED":[data.UNSUBSCRIBED.sum()],"BOUNCED":[data.BOUNCED.sum()],"DEFERRED":[data.DEFERRED.sum()],"DROPPED":[data.DROPPED.sum()],"UNIQUE_OPENS":[sum(data.OPENED.value_counts().to_list())],"UNIQUE_CLICKS":[sum(data.CLICKED.value_counts().to_list())]},index=['STATS'])
+		return stats
 
 class Tag(models.Model):
 	name = models.CharField(max_length=200)

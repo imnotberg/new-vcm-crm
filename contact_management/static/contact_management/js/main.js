@@ -39,5 +39,9 @@ user_input.on('keyup', function () {
 	// setTimeout returns the ID of the function to be executed
 	scheduled_function = setTimeout(ajax_call, delay_by_in_ms, endpoint, request_parameters)
 })
+function getData(){
+	console.log('getting data!')
+}
+document.addEventListener("DOMContentLoaded", getData);
 
 

@@ -1,0 +1,30 @@
+{% load bootstrap4 %}
+<div class="modal fade" id="accountUpdateModal" tabindex="-1" role="dialog" aria-labelledby="accountUpdateModal" aria-hidden="true">
+<form method="post" id="add-contact-form">
+      {% csrf_token %}
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="updateAccountLongTitle">Update Account</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">      	
+
+
+      
+          {% bootstrap_form form %}
+
+           
+
+        </div>
+        <div class="modal-footer">
+        	<input type="hidden" name="account_id" value="{{object.pk}}">
+         <input class="btn btn-primary" type="submit" value="Add Contact" />
+         
+        </div>
+      </div>
+    </div>
+  </form>
+</div>

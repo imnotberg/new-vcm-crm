@@ -1,0 +1,232 @@
+{% extends 'contact_management/base.html' %}
+
+{% load static %}
+{% load extras %}
+{% load humanize %}
+
+{% block content %}
+<div class="content-wrapper">
+	<div class="row">
+		<div class="col-sm-8">
+			<div class="card scrollDiv" id="search-card">
+				<div class="card-body" id="search-card-body">
+					<div class="card-title">search</div>
+
+					<div class="table-responsive">
+						<table id="accounts-list-table" class="table table-sm table-hover" style="table-layout: fixed;%">
+							<thead>
+								<tr>
+									<th>ID</th>
+									<th>NAME</th>
+									<th>CITY</th>
+									<th>STATE</th>
+									<th>TAGS</th>
+									<th>PHONE</th>
+									<th>EMAIL</th>
+
+								</tr>
+							</thead>
+							<tbody id="accounts-list-table-body">
+								
+							</tbody>
+						</table>
+					</div>
+				</div>
+				
+			</div>
+		</div>
+		<div class="col-sm-4" id="account-col">
+			<div class="card" id="account-actions">
+				<div class="card-body" id="account-actions-body">
+					<div class="card-title">actions</div>
+					<div class="alert alert-info alert-dismissible fade show" id="select-account-alert" role="alert">
+						<strong>Select Account</strong> from the table to see information
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+						</button>
+						</div>
+				</div>
+			</div>
+		</div>
+		
+	</div>
+</div>
+{% include 'contact_management/note_modal_accounts.html' %}
+{% include 'contact_management/email_modal_accounts.html' %}
+{% include 'contact_management/add_contact_modal_accounts.html' %}
+{% include 'contact_management/account_update_modal.html' %}
+<script>
+	function selectAccount(pk){
+		$('#select-account-alert').remove()||null;
+		$('#account-actions-body').remove()||null;
+		$('#account-accordion-card').remove()||null;
+		fetch("{% url 'contact_management:account_feed' 999888777 %}".replace(/999888777/,pk.toString()),{
+			}).then(function(response){
+				return response.json();
+			}).then(function(data){
+				console.log(data);
+				var id = data["account"]["id"];
+				contacts = data["account"]["contacts"];				
+				notes = data["account"]["notes"];
+				invoices = data["account"]["invoices"];
+				$('#account-actions').append(`<div class="card-body" id="account-actions-body"'><div class="card-title">account actions</div></div>`);
+				$('#account-actions-body').append('<div class="d-flex flex-row justify-content-center"><div class="d-flex flex-column justify-content-center"><div class="p-2" id="account-name"></div><div class="p-2" id="account-website"></div><div class="p-2" id="account-address"></div><div class="p-2" id="account-city-state"></div><div class="p-2" id="account-phone"></div></div></div></div><div class="d-flex flex-row justify-content-around" id="account-actions-icons"><div class="p-2"><a data-toggle="modal" data-target="#exampleModalCenter" href="#exampleModalCenter" id="account-add-note"><i class="mdi  mdi-comment-plus-outline icon-md mr-3" id="account-add-note-icon" onclick="clickedIcon('+data["account"]["id"]+')"></i></a></div><div class="p-2"><a data-toggle="modal" data-target="#addContactFormModal" href="#addContactFormModal"><i class="mdi  mdi-account-multiple-plus icon-md mr-3" onclick="clickedIcon('+data["account"]["id"]+')"></i></a></div><div class="p-2"><a data-toggle="modal" data-target="#emailFormModal" href="#emailFormModal"><i class="mdi  mdi-email icon-md mr-3" onclick="clickedIcon('+data["account"]["id"]+')"></i></a></div><div class="p-2"><a data-toggle="modal" data-target="#accountUpdateModal" href="#accountUpdateModal"><i class="mdi mdi-pencil icon-md mr-3"></i></a></div><div class="p-2"><a href="./accounts/'+data["account"]["id"]+'/detail"><i class="mdi mdi-account-card-details icon-md mr-3"></i></a></div></div>');
+				$('#account-name').append(`<h3>${data["account"]["name"]||""}</h3>`);
+				$('#account-address').append(`<p>${data["account"]["billing_street"]||""}</p>`);
+				$('#account-address').append(`<p>${data["account"]["billing_city"]||""}  ${data["account"]["billing_state"]||""}</p>`);
+				$('#account-address').append(`<p>${data["account"]["phone"]||""}</p>`);
+				$('#account-website').append(`<a href="${data["account"]["website"]||""}">${data["account"]["website"]||""}</p>`);
+				$('#account-add-note').attr("data-id",id);
+				$('#account-col').append(`<div class="accordion" id="account-accordion"><div class="card"><div class="card-header" id="headingOne"><h2 class="mb-0">
+        			<button class="btn btn-link" type="button" data-toggle="collapse" data-target="#account-contacts" aria-expanded="true" aria-controls="collapseOne">Contacts</button></h2></div><div id="account-contacts" class="collapse show" aria-labelledby="headingOne" data-parent="#account-accordion"><div class="card-body"><div class="table-responsive"><table class="table table-sm table-hover" style="table-layout:fixed;" id="account-contacts-table"><thead
+        			><tr><th>Name</th><th>Phone</th><th>Email</th></tr></thead></table></div></div></div></div>
+        			<div class="card"><div class="card-header"  id="headingTwo"><h2 class="mb-0"><button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#account-notes" aria-expanded="false" aria-controls="collapseTwo">
+         				Notes</button></h2></div><div id="account-notes" class="collapse" aria-labelledby="headingTwo" data-parent="#account-accordion"><div class="card-body"><div class="table-responsive"><table class="table table-sm table-hover" style="table-layout:fixed;" id="account-notes-table"><thead
+        			><tr><th>Date</th><th>Note</th></tr></thead></table></div></div></div>  </div>
+         				<div class="card"><div class="card-header" id="headingThree"><h2 class="mb-0"><button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#account-invoices" aria-expanded="false" aria-controls="collapseThree">Invoices        </button></h2></div>
+         				 <div id="account-invoices" class="collapse" aria-labelledby="headingThree" data-parent="#account-accordion">
+      					 <div class="card-body">these are invoices      </div></div></div></div>`)
+				$('#account-contacts-table').DataTable({
+					"paging":false,
+					"searching":false,
+					"autoWidth":false,
+					"columnDefs": [
+					   	{"width":"30%","targets":[0,1],},
+        				{"width":"40%","targets":2},
+        				{"render":function(data,type,row){
+
+            				return '<a href="mailto:'+data+'">'+data+'</a>'
+            			},
+            				"targets":2,}
+
+        				]
+				});
+				for(var i=0;i<contacts.length;i++){
+					console.log(contacts[i]);
+					$('#account-contacts-table').DataTable().row.add(
+						[
+							contacts[i]["full_name"],
+							contacts[i]["phone"],
+							contacts[i]["email"]
+						]
+						).draw();
+				}
+				for(var i=0;i<notes.length;i++){
+					console.log(notes[i]);
+					$('#account-notes-table').DataTable().row.add(
+						[
+							notes[i]["date"],
+							notes[i]["note"],
+							
+						]
+						).draw();
+				}
+
+					
+
+			})
+			
+	}
+</script>
+<script type="text/javascript">
+	function loadData() {
+    $.ajax({
+      type: 'GET',
+      url: "{% url 'contact_management:accounts_feed' %}",
+      contentType: "text/plain",
+      dataType: 'json',
+      success: function (data) {
+        myJsonData = data;
+        populateDataTable(myJsonData);
+      },
+      error: function (e) {
+        console.log("There was an error with your request...");
+        console.log("error: " + JSON.stringify(e));
+      }
+    });
+  }
+</script>
+<script type="text/javascript">
+	function clickedIcon(pk){
+		console.log(selectAccount(pk));
+		$('#contacts-form-check').empty();
+		selectedAccountId = pk;
+		for(var i=0;i<contacts.length;i++){			
+			$('#contacts-form-check').append(
+				`
+				<input class="form-check-input" type="checkbox" id="inlineCheckbox`+contacts[i]["id"]+`" name="contact-checkbox-`+contacts[i]["id"]+`" value="`+contacts[i]["id"]+`">
+				<input type="hidden" name="model_type`+contacts[i]["id"]+`value="CONTACT">
+				<label class="form-check-label" for="inlineCheckbox`+contacts[i]["id"]+`">`+contacts[i]["full_name"]+`:+`+contacts[i]["email"]+`</label>
+				`)
+		}
+		
+		
+	}
+</script>
+<script type="text/javascript">
+ function populateDataTable(data) {
+    console.log("populating data table...");    
+    var accounts = data.accounts;
+    // clear the table before populating it with more data
+    $("#accounts-list-table").DataTable().clear();
+    $("#accounts-list-table").DataTable();
+    var length = Object.keys(data.accounts).length;
+    for(var i = 0; i < length+1; i++) {
+      var account = accounts[i];
+      // You could also use an ajax property on the data table initialization
+
+      $('#accounts-list-table').DataTable().row.add( [
+        account["id"],
+        account["name"],
+        account["city"],
+        account["state"],
+        account["tags"],
+        account["phone"],
+        account["email"],
+
+
+      ]).draw();
+    }
+  }
+</script>
+<script type="text/javascript">
+
+	$(document).ready( function () {
+    $('#accounts-list-table').DataTable({
+    	"autoWidth":false,
+    	"columnDefs": [
+        	{"width":"5%","targets":[0,3],},
+        	{"width":"20%","targets":[4,6],},
+        	{"width":"10%","targets":[2,5],},
+        	{"width":"30%","targets":[1,],},
+            {
+                // The `data` parameter refers to the data for the cell (defined by the
+                // `data` option, which defaults to the column being worked with, in
+                // this case `data: 0`.
+                //<a href="#" onclick="IDClick(id);event.preventDefault();">id</a>
+                "render": function ( data, type, row ) {
+                	return '<a href="#" onclick="selectAccount('+row[0]+')">'+data+'</a>'
+                    //return '<button onclick="selectAccount('+data+')">'+data+'</button>'
+                    
+                },
+                "targets": [0,1],
+            },
+            {"render":function(data,type,row){
+            	return '<a href="mailto:'+data+'">'+data+'</a>'
+            },
+            	"targets":6,
+        }
+            
+        ]
+    });
+    loadData();
+    var table = $('#accounts-list-table');   
+    var data = table.column(3).data();
+    console.log(data);
+
+} );
+</script>
+<script type="text/javascript">
+	
+</script>
+{% endblock %}

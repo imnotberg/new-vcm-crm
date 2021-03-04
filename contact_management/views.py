@@ -19,13 +19,45 @@ from django.views.generic import (
     View,
 )
 from .filters import AccountFilter,ContactFilter,LeadFilter,ItemFilter,InvoiceFilter
-from .forms import NoteForm,EmailForm,AddContactForm
+from .forms import NoteForm,EmailForm,AddContactForm,AccountModalForm
 from .models import *
 from .tables import AccountTable,ContactTable,LeadTable,ItemTable,InvoiceTable
+
 from .utils import get_value,login_url
 
 # Create your views here.
+#PAGE VIEWS
+def test(request):
+    context = {}
+    return render(request,'contact_management/test.html',context)
+def accounts(request):
+    context = {'accounts':Account.objects.all().order_by('name'),'note_form':NoteForm,'email_form':EmailForm,'add_contact_form':AddContactForm,'form':AccountModalForm,}    
+    return render(request,'contact_management/accounts.html',context)
 
+#PAGE FEEDS
+def accounts_feed(request):
+    #accounts = serializers.serialize("json",Account.objects.all())
+    #tags = serializers.serialize("json",Tag.objects.all())
+    accounts = [{"id":a.id,"name":a.name,"phone":a.phone,"email":a.email,"city":a.billing_city,"state":a.billing_state,"contacts":[c.full_name for c in a.contacts.all().order_by('last_name')],"tags":', '.join([t.name for t in a.tags.all()]),"button":f"<button class='form-control' onclick='selectAccount({a.id})'>View</button>"} for a in Account.objects.all()]
+    print(accounts) 
+    return JsonResponse({'accounts':accounts,},safe=False)
+def account_feed(request,account_id):
+    
+    account = Account.objects.get(pk=account_id)
+    account_info = {x:y for x,y in account.__dict__.items() if x!='_state'}
+    account_info["notes"] = [{"date":n.date,"user":n.user,"note":n.note} for n in account.notes.all().order_by('-date')]
+    account_info["invoices"]=[{'date':i.date,'number':i.number,'total':i.total,} for i in account.invoices.all()]
+    account_info["contacts"]=[{'full_name':c.full_name,'phone':c.phone,'email':c.email,'id':c.id,} for c in account.contacts.all()]
+    account_info["logo"] = account.logo
+    return JsonResponse({"account":account_info})
+
+#SEARCH FEEDS
+def accounts_search(request,query):
+    accounts = Account.objects.filter(Q(id__icontains=query)|Q(name__icontains=query)|Q(tags__name__icontains=query)|Q(billing_state__icontains=query)|Q(billing_city__icontains=query)).distinct()
+    return JsonResponse({"accounts":serializers .serialize("json",accounts)},safe=False)
+#TABLES AND CHARTS
+
+'''
 def index(request):
 	context = {
 
@@ -68,7 +100,7 @@ class AccountListView(LoginRequiredMixin,SingleTableMixin, FilterView):
         context['filter']=AccountFilter(self.request.GET,queryset=self.get_queryset())  
 
         return context
-
+'''
 class AccountDetailView(LoginRequiredMixin,DetailView):
     login_url = 'contact_management:login'
     model = Account
@@ -94,8 +126,8 @@ class AccountDetailView(LoginRequiredMixin,DetailView):
         return self.render_to_response(context)
    
     
-    
-
+'''    
+'''
 class AccountUpdateView(LoginRequiredMixin,UpdateView):
     model = Account
     fields = '__all__'
@@ -121,7 +153,8 @@ class AccountUpdateView(LoginRequiredMixin,UpdateView):
 
         return context
 
-    
+''' 
+'''  
 @login_required(login_url='contact_management:login')
 def make_primary_contact(request,account_id,contact_id):
     account = Account.objects.get(pk=account_id)
@@ -129,16 +162,17 @@ def make_primary_contact(request,account_id,contact_id):
     account.contact_name = contact.full_name
     account.save()
     return redirect(request.META['HTTP_REFERER'])
-
+'''
+'''
 @login_required(login_url='contact_management:login')
 def remove_contact(request,contact_id):
     contact = Contact.objects.get(pk=contact_id)
     contact.delete()
 
     return redirect(request.META['HTTP_REFERER'])
-    
+'''    
 
-
+'''
 class ContactListView(LoginRequiredMixin,SingleTableMixin,FilterView):
     login_url = 'contact_management:login'
     model = Contact
@@ -153,7 +187,8 @@ class ContactListView(LoginRequiredMixin,SingleTableMixin,FilterView):
         context['filter']=ContactFilter(self.request.GET,queryset=self.get_queryset())  
 
         return context
-
+'''
+'''
 class ContactDetailView(LoginRequiredMixin,DetailView):
     login_url = 'contact_management:login'
     model = Contact
@@ -166,7 +201,7 @@ class ContactDetailView(LoginRequiredMixin,DetailView):
         context['note_form'] = NoteForm
         context['email_form'] = EmailForm
         return context
-
+'''
 class ContactUpdateView(LoginRequiredMixin,UpdateView):
     model = Contact
     fields = '__all__'
@@ -253,7 +288,7 @@ class InvoiceListView(LoginRequiredMixin,ListView):
         table = InvoiceTable(Invoice.objects.all())
         context['filter']=InvoiceFilter(self.request.GET,queryset=self.get_queryset())  
         return context
-
+'''
 class InvoiceDetailView(LoginRequiredMixin,DetailView):
     login_url = login_url
     model = Invoice 
@@ -263,6 +298,7 @@ class InvoiceDetailView(LoginRequiredMixin,DetailView):
         context['account'] = Account.objects.get(pk=self.kwargs['account_id'])
         context['table']=InvoiceTable(OrderItem.objects.filter(invoice=self.object))
         return context
+'''
 class InvoiceCreateView(LoginRequiredMixin,CreateView):
     login_url = login_url
     model = Invoice
@@ -272,6 +308,7 @@ class InvoiceCreateView(LoginRequiredMixin,CreateView):
         context["account"] = Account.objects.get(pk=self.kwargs["account_id"])
         return context
 @login_required(login_url=login_url)
+'''
 @login_required(login_url='contact_management:login')
 def add_contact(request,form_data):
     if request.is_ajax and request.method == 'POST':
@@ -289,19 +326,20 @@ def add_contact(request,form_data):
         return JsonResponse({"new_contact":new_contact},safe=False)
     else:
         return JsonResponse({"error":"error",},safe=False)
-
+'''
 @login_required(login_url='contact_management:login')
 def note_delete(request,note_id):
     note = Note.objects.get(pk=note_id)
     note.delete()
     return redirect(request.META['HTTP_REFERER']) 
+'''
 @login_required(login_url='contact_management:login')
 def send_email_form(request,form_data):
     #send_email(self,subject=None,body=None,sg_template_on=False,sg_template=None,template=None,campaign=None):
     if request.is_ajax and request.method == 'POST':
         jform = json.loads(form_data)
-        print(jform,'this is jform')
-        contacts = Contact.objects.filter(pk__in=[v for k,v in jform.items() if 'contact-checkbox' in k])
+        j = [v for k,v in jform.items() if 'contact-checkbox' in k]       
+        contacts = Contact.objects.filter(pk__in=[v for k,v in jform.items() if 'contact-checkbox' in k])        
         leads = Lead.objects.filter(pk__in=[v for k,v in jform.items() if 'lead-checkbox' in k])
         subject = jform.get("subject",None)
         body = jform.get("body",None)
@@ -322,7 +360,9 @@ def send_email_form(request,form_data):
         for l in leads:
             l.send_email(subject,body,sg_template_on,sg_template,template,campaign=None)
        
-        return JsonResponse(jform)      
+        return JsonResponse(jform)
+'''
+'''      
 @login_required(login_url='contact_management:login')
 def note_create(request,form_data):
     if request.is_ajax and request.method == 'POST':
@@ -354,12 +394,15 @@ def note_create(request,form_data):
             n.follow_up_date = follow_up_date
             if follow_up_type is not None and follow_up_type != '':
                 n.follow_up_type = follow_up_type
+        print(n.note,'is the note here?')
         n.save()
+        print(n.note,'maybe its here?')
         print('notesaved',n)
         new_note = serializers.serialize("json",[n,])
         return JsonResponse({"new_note":new_note,})
     else:
         return JsonResponse({"not_data":"not_data"})
+'''
 @login_required(login_url='contact_management:login')
 def delete_lead(request,pk):
     lead = Lead.objects.get(pk=pk)
@@ -421,3 +464,4 @@ def email_data(request):
     return JsonResponse(data.to_json(orient="index"),safe=False)
 
 
+'''
