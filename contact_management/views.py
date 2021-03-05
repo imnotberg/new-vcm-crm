@@ -54,6 +54,17 @@ def contacts_feed(request):
 
     return JsonResponse({"contacts":contacts},safe=False)
 
+def contact_feed(request,contact_id):
+    contact = Contact.objects.get(pk=contact_id)
+    contact_info = {x:y for x,y in contact.__dict__.items() if x!='_state'}
+    contact_info["full_name"]=contact.full_name
+    contact_info["account"]={x:y for x,y in contact.account.__dict__.items() if x!='_state'}
+    contact_info["contacts"] = [{x:y for x,y in c.__dict__.items() if x!='_state'} for c in Contact.objects.filter(account=contact.account).exclude(pk=contact.pk)]
+    contact_info["notes"] = [{x:y for x,y in n.__dict__.items() if x != '_state'} for n in Note.objects.filter(Q(contact=contact)|Q(account=contact.account))]
+    contact_info["invoices"] = [{x:y for x,y in i.__dict__.items() if x != '_state'} for i in Invoice.objects.filter(account=contact.account)]
+
+    return JsonResponse({"contact":contact_info},safe=False)
+
 #SEARCH FEEDS
 
 #TABLES AND CHARTS

@@ -44,4 +44,30 @@ function getData(){
 }
 document.addEventListener("DOMContentLoaded", getData);
 
+function populateContactDataTable(data) {
+	 	$('#contacts-list-table').DataTable().clear();
+	    console.log("populating conta data table...");    
+	    var contacts = data.contacts;
+	    console.log('contacts' + contacts);
+	    $('#search-card-body').remove();
+	    $('#search-card').append(`<div class="card" id="search-card-body"><div class="card-body"><div class="card-title">contacts</div><div class="table-responsive"><table class="table table-sm table-hover" id="main-contacts-list-table"><thead><tr><th>Name</th><th>Account</th><th>City</th><th>State</th><th>Phone</th><th>Email</th></tr></thead></table></div></div></div>`);
 
+	    // clear the table before populating it with more data
+	    $('#main-contacts-list-table').DataTable();
+	    //$("#contacts-list-table").DataTable();
+	    var length = Object.keys(data.contacts).length;
+	    for(var i = 0; i < contacts.length; i++) {
+	      var contact = contacts[i];
+	      // You could also use an ajax property on the data table initialization
+	     $('#main-contacts-list-table').DataTable().row.add( [
+	        contact["full_name"],
+	        contact["account_name"],
+	        contact["city"],
+	        contact["state"],
+	        contact["phone"],
+	        contact["email"],
+
+
+	      ]).draw();
+	    }
+	  }

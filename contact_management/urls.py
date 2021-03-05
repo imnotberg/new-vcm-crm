@@ -13,6 +13,7 @@ urlpatterns = [
 	path('accounts-feed',views.accounts_feed,name='accounts_feed'),
 	path('account-feed/account-id/<account_id>',views.account_feed,name='account_feed'),
 	path('contacts-feed',views.contacts_feed,name="contacts_feed"),
+	path('contact-feed/contact-id/<contact_id>',views.contact_feed,name='contact_feed'),
 	#CBV
 	path('accounts/<pk>/detail/',views.AccountDetailView.as_view(),name='account_detail'),
 	path('contacts/account/<account_id>/contact/<pk>/detail',views.ContactDetailView.as_view(),name='contact_detail'),

@@ -11,10 +11,10 @@
 			<div class="card scrollDiv" id="search-card">
 				<div class="d-flex flex-row justify-content-around">
 					<div class="p-2">
-						<button class="btn btn-link" onclick="loadAccountData()">ACCOUNTS</button>
+						<button type="button" class="btn btn-primary btn-lg" onclick="loadAccountData()">ACCOUNTS</button>
 					</div>
-					<div class="p-2"><button class="btn btn-link" onclick="loadContactData()">CONTACTS</button></div>
-					<div class="p-2"><button class="btn btn-link" onclick="loadLeadData()">LEADS</button></div>
+					<div class="p-2"><button type="button" class="btn btn-primary btn-lg" onclick="loadContactData()">CONTACTS</button></div>
+					<div class="p-2"><button type="button" class="btn btn-primary btn-lg" onclick="loadLeadData()">LEADS</button></div>
 				</div>
 				<hr />
 				<div class="card-body" id="search-card-body">
@@ -218,7 +218,7 @@
     $("#accounts-list-table").DataTable().clear();
     $("#accounts-list-table").DataTable();
     var length = Object.keys(data.accounts).length;
-    for(var i = 0; i < length+1; i++) {
+    for(var i = 0; i < length; i++) {
       var account = accounts[i];
       // You could also use an ajax property on the data table initialization
 
@@ -238,31 +238,71 @@
 </script>
 <script type="text/javascript">
  function populateContactDataTable(data) {
- 	$('#contacts-list-table').DataTable().clear();
-    console.log("populating conta data table...");    
-    var contacts = data.contacts;
-    $('#search-card-body').remove();
-    $('#search-card').append(`<div class="card" id="search-card-body"><div class="card-body"><div class="card-title">contacts</div><div class="table-responsive><table class="table table-sm table-hover" id="contacts-list-table"><thead><tr><th>Name</th><th>Account</th><th>City</th><th>State</th><th>Phone</th><th>Email</th></tr></thead></table></div></div></div>`);
+ 		$('#search-card-body').remove();
+ 		$('#accounts-list-table').remove()||null;
+ 		$('#accounts-list-table_wrapper').remove()||null;
+ 		$('#select-account-alert').remove()||null;
+ 		$('#account-actions-body').append(`<div class="alert alert-info alert-dismissible fade show" id="select-account-alert" role="alert">
+						<strong>Select Contact</strong> from the table to see information
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+						</button>
+						</div>`)
+	 	$('#contacts-list-table').DataTable().clear();
+	    console.log("populating conta data table...");    
+	    var contacts = data.contacts;
+	    console.log('contacts' + contacts);
+	    $('#search-card-body').remove();
+	    $('#search-card').append(`<div class="card" id="search-card-body"><div class="card-body"><div class="card-title">contacts</div><div class="table-responsive"><table class="table table-sm table-hover" id="main-contacts-list-table"><thead><tr><th>ID</th><th>Name</th><th>Account</th><th>City</th><th>State</th><th>Phone</th><th>Email</th></tr></thead></table></div></div></div>`);
 
-    // clear the table before populating it with more data
-    $("#contacts-list-table").DataTable();
-    var length = Object.keys(data.accounts).length;
-    for(var i = 0; i < length+1; i++) {
-      var account = accounts[i];
-      // You could also use an ajax property on the data table initialization
+	    // clear the table before populating it with more data
+	    $('#main-contacts-list-table').DataTable({
+    	"autoWidth":false,
+    	"columnDefs": [
+    		{"visible":false,"targets":0},
+        	{"width":"5%","targets":[0,3],},
+        	{"width":"20%","targets":[4],},
+        	{"width":"10%","targets":[2,5],},
+        	{"width":"30%","targets":[1,],},
+            {
+                // The `data` parameter refers to the data for the cell (defined by the
+                // `data` option, which defaults to the column being worked with, in
+                // this case `data: 0`.
+                //<a href="#" onclick="IDClick(id);event.preventDefault();">id</a>
+                "render": function ( data, type, row ) {
+                	return '<a href="#" onclick="selectContact('+row[0]+')">'+data+'</a>'
+                    //return '<button onclick="selectAccount('+data+')">'+data+'</button>'
+                    
+                },
+                "targets": [0,1],
+            },
+            {"render":function(data,type,row){
+            	return '<a href="mailto:'+data+'">'+data+'</a>'
+            },
+            	"targets":5,
+        },
 
-      $('#contacts-list-table').DataTable().row.add( [
-        account["full_name"],
-        account["account_name"],
-        account["city"],
-        account["state"],
-        account["phone"],
-        account["email"],
+            
+        ]
+    });
+	    //$("#contacts-list-table").DataTable();
+	    var length = Object.keys(data.contacts).length;
+	    for(var i = 0; i < contacts.length; i++) {
+	      var contact = contacts[i];
+	      // You could also use an ajax property on the data table initialization
+	     $('#main-contacts-list-table').DataTable().row.add( [
+	        contact["id"],
+	        contact["full_name"],
+	        contact["account_name"],
+	        contact["city"],
+	        contact["state"],
+	        contact["phone"],
+	        contact["email"],
 
 
-      ]).draw();
-    }
-  }
+	      ]).draw();
+	    }
+	  }
 </script>
 <script type="text/javascript">
 	function loadContactData(){
@@ -324,6 +364,13 @@
 
 	$('#search-card-body').remove()||null;
 	$('#accounts-list-table').remove()||null;
+	$('#select-account-alert').remove()||null;
+	$('#account-actions-body').append(`<div class="alert alert-info alert-dismissible fade show" id="select-account-alert" role="alert">
+						<strong>Select Account</strong> from the table to see information
+						<button type="button" class="close" data-dismiss="alert" aria-label="Close">
+						<span aria-hidden="true">&times;</span>
+						</button>
+						</div>`);
 	$('#search-card').append(`<div class="card-body"><div class="card-title">search</div><div class="table-responsive"><table id="accounts-list-table" class="table table-sm table-hover" style="table-layout: fixed;%">
 							<thead>
 								<tr>
@@ -375,5 +422,121 @@
 
 } 	
 	
+</script>
+<script type="text/javascript">
+	function selectContact(pk){
+		$('#select-account-alert').remove()||null;
+		$('#account-actions-body').remove()||null;
+		$('#account-accordion-card').remove()||null;
+		$('#account-accordion').remove()||null;
+		fetch("{% url 'contact_management:contact_feed' 999888777 %}".replace(/999888777/,pk.toString()),{
+			}).then(function(response){
+				return response.json();
+			}).then(function(data){
+				var contact = data["contact"];
+				console.log(contact);	
+				var id = data["contact"]["id"]
+				console.log(data["contact"]["id"]);
+				//var id = data["contact"]["id"];
+				//notes = data["account"]["notes"];
+				//console.log(notes);
+				//invoices = data["account"]["invoices"];
+				$('#account-actions').append(`<div class="card-body" id="account-actions-body"'><div class="card-title">account actions</div></div>`);
+				$('#account-actions-body').append('<div class="d-flex flex-row justify-content-center"><div class="d-flex flex-column justify-content-center"><div class="p-2" id="contact-name"></div><div class="p-2" id="account-name"></div><div class="p-2" id="account-website"></div><div class="p-2" id="account-address"></div><div class="p-2" id="account-city-state"></div><div class="p-2" id="account-phone"></div></div></div></div><div class="d-flex flex-row justify-content-around" id="account-actions-icons"><div class="p-2"><a data-toggle="modal" data-target="#exampleModalCenter" href="#exampleModalCenter" id="account-add-note"><i class="mdi  mdi-comment-plus-outline icon-md mr-3" id="account-add-note-icon" onclick="clickedIcon('+id+')"></i></a></div><div class="p-2"><a data-toggle="modal" data-target="#addContactFormModal" href="#addContactFormModal"><i class="mdi  mdi-account-multiple-plus icon-md mr-3" onclick="clickedIcon('+id+')"></i></a></div><div class="p-2"><a data-toggle="modal" data-target="#emailFormModal" href="#emailFormModal"><i class="mdi  mdi-email icon-md mr-3" onclick="clickedIcon('+id+')"></i></a></div><div class="p-2"><a data-toggle="modal" data-target="#accountUpdateModal" href="#accountUpdateModal"><i class="mdi mdi-pencil icon-md mr-3"></i></a></div><div class="p-2"><a href="./accounts/'+id+'/detail"><i class="mdi mdi-account-card-details icon-md mr-3"></i></a></div></div>');
+				$('#contact-name').append(`<h3 style="text-align: center;">${contact["full_name"]||""}</h3>`)
+				$('#account-name').append(`<h5 style="text-align: center;">${contact["account"]["name"]||""}</h5>`);
+				$('#account-address').append(`<p>${contact["account"]["billing_street"]||""}</p>`);
+				$('#account-address').append(`<p>${contact["account"]["billing_city"]||""}  ${contact["account"]["billing_state"]||""}</p>`);
+				$('#account-address').append(`<p>${contact["account"]["phone"]||""}</p>`);
+				$('#account-website').append(`<a href="${contact["account"]["website"]||""}">${contact["account"]["website"]||""}</p>`);
+				$('#account-add-note').attr("data-id",id);
+				$('#account-col').append(`<div class="accordion" id="account-accordion"><div class="card"><div class="card-header" id="headingOne"><h2 class="mb-0">
+        			<button class="btn btn-link" type="button" data-toggle="collapse" data-target="#account-contacts" aria-expanded="true" aria-controls="collapseOne">Contacts</button></h2></div><div id="account-contacts" class="collapse show" aria-labelledby="headingOne" data-parent="#account-accordion"><div class="card-body"><div class="table-responsive"><table class="table table-sm table-hover" style="table-layout:fixed;" id="account-contacts-table"><thead
+        			><tr><th>Name</th><th>Phone</th><th>Email</th></tr></thead></table></div></div></div></div>
+        			<div class="card"><div class="card-header"  id="headingTwo"><h2 class="mb-0"><button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#account-notes" aria-expanded="false" aria-controls="collapseTwo">
+         				Notes</button></h2></div><div id="account-notes" class="collapse" aria-labelledby="headingTwo" data-parent="#account-accordion"><div class="card-body"><div class="table-responsive"><table class="table table-sm table-hover" style="table-layout:fixed;" id="account-notes-table"><thead
+        			><tr><th>Date</th><th>Note</th></tr></thead></table></div></div></div>  </div>
+         				<div class="card"><div class="card-header" id="headingThree"><h2 class="mb-0"><button class="btn btn-link collapsed" type="button" data-toggle="collapse" data-target="#account-invoices" aria-expanded="false" aria-controls="collapseThree">Invoices        </button></h2></div>
+         				 <div id="account-invoices" class="collapse" aria-labelledby="headingThree" data-parent="#account-accordion">
+      					 <div class="card-body"><div class="table-responsive"><table class="table table-sm table-hover" style="table-layout:fixed;" id="account-invoices-table"><thead
+        			><tr><th>Date</th><th>Number</th><th>Total</th></tr></thead></table></div>      </div></div></div></div>`)
+				$('#account-contacts-table').DataTable({
+					"paging":false,
+					"searching":false,
+					"autoWidth":false,
+					"columnDefs": [
+					   	{"width":"30%","targets":[0,1],},
+        				{"width":"40%","targets":2},
+        				{"render":function(data,type,row){
+
+            				return '<a href="mailto:'+data+'">'+data+'</a>'
+            			},
+            				"targets":2,}
+
+        				]
+				});
+				var contacts = contact["contacts"];
+				for(var i=0;i<contacts.length;i++){
+					console.log(contacts[i]);
+					$('#account-contacts-table').DataTable().row.add(
+						[
+							contacts[i]["first_name"]+contacts[i]["last_name"],
+							contacts[i]["phone"],
+							contacts[i]["email"]
+						]
+						).draw();
+				}
+				$('#account-notes-table').DataTable({
+					"paging":false,
+					"searching":false,
+					"autoWidth":false,
+					"columnDefs": [
+					   	{"width":"30%","targets":[0],},
+        				{"width":"70%","targets":1},
+        				]
+				})
+				var notes = contact["notes"];
+				for(var i=0;i<notes.length;i++){
+					console.log(notes[i]);
+					$('#account-notes-table').DataTable().row.add(
+						[
+							notes[i]["date"],
+							notes[i]["note"],
+							
+						]
+						).draw();
+				}
+				var invoices = contact["invoices"];
+				$('#account-invoices-table').DataTable({
+					"paging":false,
+					"searching":false,
+					"autoWidth":false,
+					"columnDefs": [
+					   	{"width":"33%","targets":[0,1,2],},
+        				{"render":function(data,type,row){
+        					console.log(row);
+        					var invoiceUrl = "{% url 'contact_management:invoice_detail' account_id=999888777 pk=111222333 %}".replace(/999888777/,contact["account"]["id"].toString()).replace(/111222333/,row[1].toString());
+        					console.log(invoiceUrl);
+        					return `<a href="`+invoiceUrl+`">`+data+`</a>`	},
+        					"targets":[0,1],
+        				}
+        				]
+				})
+				for(var i=0;i<invoices.length;i++){
+					console.log(invoices[i]);
+					$('#account-invoices-table').DataTable().row.add(
+						[
+							invoices[i]["date"],
+							invoices[i]["number"],
+							invoices[i]["total"]
+							
+						]
+						).draw();
+				}
+
+					
+
+			})
+	}
 </script>
 {% endblock %}
