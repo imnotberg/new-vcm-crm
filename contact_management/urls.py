@@ -18,9 +18,11 @@ urlpatterns = [
 	path('accounts/<pk>/detail/',views.AccountDetailView.as_view(),name='account_detail'),
 	path('contacts/account/<account_id>/contact/<pk>/detail',views.ContactDetailView.as_view(),name='contact_detail'),
 	path('account/<account_id>/invoice/<pk>/detail',views.InvoiceDetailView.as_view(),name='invoice_detail'),
+	path('contacts/account/<account_id>/contact/<pk>/update',views.ContactUpdateView.as_view(),name='contact_update'),
 	#ACTIONS
 	path('accounts/<account_id>/contact/<contact_id>/make-primary',views.make_primary_contact,name='make_primary_contact'),
 	path('contacts/<contact_id>/remove',views.remove_contact,name='remove_contact'),
+	path('note-delete/<note_id>',views.note_delete,name='note_delete'),
 	#OLD
 	path('accounts/<pk>/update',views.AccountUpdateView.as_view(),name='account_update'),
 	#FORM URLS

@@ -2,12 +2,35 @@ from django import forms
 from django.forms import ModelForm
 from contact_management.models import *
 
+class CreateEmailCampaignForm(ModelForm):
+	class Meta:
+		model = EmailCampaign
+		fields = ['date','subject','description','template','sg_template_on']
+		def __init__(self,*args,**kwargs):
+			super(CreateEmailCampaignForm,self).__init__(*args,**kwargs)
+			for field in self.fields:
+				self.fields[field].required = False
+
+
+
+
+
+class EmailCampaignModalForm(forms.Form):
+	campaign = forms.ChoiceField(choices=EmailCampaign.objects.filter(sent=False))
 class AccountModalForm(ModelForm):
 	class Meta:
 		model = Account
 		fields = '__all__'
 	def __init__(self, *args, **kwargs):
 		super(AccountModalForm, self).__init__(*args, **kwargs)
+		for field in self.fields:
+			self.fields[field].required = False
+class ContactModalForm(ModelForm):
+	class Meta:
+		model = Contact
+		fields = '__all__'
+	def __init__(self, *args, **kwargs):
+		super(ContactModalForm, self).__init__(*args, **kwargs)
 		for field in self.fields:
 			self.fields[field].required = False
 class NoteForm(ModelForm):

@@ -15,6 +15,7 @@
 					</div>
 					<div class="p-2"><button type="button" class="btn btn-primary btn-lg" onclick="loadContactData()">CONTACTS</button></div>
 					<div class="p-2"><button type="button" class="btn btn-primary btn-lg" onclick="loadLeadData()">LEADS</button></div>
+					<div class="p-2"><button type="button" class="btn btn-danger btn-lg" data-toggle="modal" data-target="#createCampaignModal" ><a href="" data-toggle="modal" data-target="#createCampaignModal" href="#createCampaignModal">CREATE CAMPAIGN</a></button></div>
 				</div>
 				<hr />
 				<div class="card-body" id="search-card-body">
@@ -63,6 +64,10 @@
 {% include 'contact_management/email_modal_accounts.html' %}
 {% include 'contact_management/add_contact_modal_accounts.html' %}
 {% include 'contact_management/account_update_modal.html' %}
+{% include 'contact_management/contact_note_modal_accounts.html' %}
+{% include 'contact_management/email_modal_for_contact_accounts.html' %}
+{% include 'contact_management/contact_update_modal.html' %}
+{% include 'contact_management/create_campaign_modal.html' %}
 <script>
 	function selectAccount(pk){
 		console.log(pk);
@@ -80,8 +85,10 @@
 				notes = data["account"]["notes"];
 				console.log(notes);
 				invoices = data["account"]["invoices"];
+				var updateAccountUrl = "{% url 'contact_management:account_update' '123456789' %}".replace(/123456789/,id.toString());
+
 				$('#account-actions').append(`<div class="card-body" id="account-actions-body"'><div class="card-title">account actions</div></div>`);
-				$('#account-actions-body').append('<div class="d-flex flex-row justify-content-center"><div class="d-flex flex-column justify-content-center"><div class="p-2" id="account-name"></div><div class="p-2" id="account-website"></div><div class="p-2" id="account-address"></div><div class="p-2" id="account-city-state"></div><div class="p-2" id="account-phone"></div></div></div></div><div class="d-flex flex-row justify-content-around" id="account-actions-icons"><div class="p-2"><a data-toggle="modal" data-target="#exampleModalCenter" href="#exampleModalCenter" id="account-add-note"><i class="mdi  mdi-comment-plus-outline icon-md mr-3" id="account-add-note-icon" onclick="clickedIcon('+data["account"]["id"]+')"></i></a></div><div class="p-2"><a data-toggle="modal" data-target="#addContactFormModal" href="#addContactFormModal"><i class="mdi  mdi-account-multiple-plus icon-md mr-3" onclick="clickedIcon('+data["account"]["id"]+')"></i></a></div><div class="p-2"><a data-toggle="modal" data-target="#emailFormModal" href="#emailFormModal"><i class="mdi  mdi-email icon-md mr-3" onclick="clickedIcon('+data["account"]["id"]+')"></i></a></div><div class="p-2"><a data-toggle="modal" data-target="#accountUpdateModal" href="#accountUpdateModal"><i class="mdi mdi-pencil icon-md mr-3"></i></a></div><div class="p-2"><a href="./accounts/'+data["account"]["id"]+'/detail"><i class="mdi mdi-account-card-details icon-md mr-3"></i></a></div></div>');
+				$('#account-actions-body').append('<div class="d-flex flex-row justify-content-center"><div class="d-flex flex-column justify-content-center"><div class="p-2" id="account-name"></div><div class="p-2" id="account-website"></div><div class="p-2" id="account-address"></div><div class="p-2" id="account-city-state"></div><div class="p-2" id="account-phone"></div></div></div></div><div class="d-flex flex-row justify-content-around" id="account-actions-icons"><div class="p-2"><a data-toggle="modal" data-target="#exampleModalCenter" href="#exampleModalCenter" id="account-add-note"><i class="mdi  mdi-comment-plus-outline icon-md mr-3" id="account-add-note-icon" onclick="clickedIcon('+data["account"]["id"]+')"></i></a></div><div class="p-2"><a data-toggle="modal" data-target="#addContactFormModal" href="#addContactFormModal"><i class="mdi  mdi-account-multiple-plus icon-md mr-3" onclick="clickedIcon('+data["account"]["id"]+')"></i></a></div><div class="p-2"><a data-toggle="modal" data-target="#emailFormModal" href="#emailFormModal"><i class="mdi  mdi-email icon-md mr-3" onclick="clickedIcon('+data["account"]["id"]+')"></i></a></div><div class="p-2"><a href="'+updateAccountUrl+'"><i class="mdi mdi-pencil icon-md mr-3"></i></a></div><div class="p-2"><a href="./accounts/'+data["account"]["id"]+'/detail"><i class="mdi mdi-account-card-details icon-md mr-3"></i></a></div></div>');
 				$('#account-name').append(`<h3>${data["account"]["name"]||""}</h3>`);
 				$('#account-address').append(`<p>${data["account"]["billing_street"]||""}</p>`);
 				$('#account-address').append(`<p>${data["account"]["billing_city"]||""}  ${data["account"]["billing_state"]||""}</p>`);
@@ -152,7 +159,7 @@
         					console.log(row);
         					var invoiceUrl = "{% url 'contact_management:invoice_detail' account_id=999888777 pk=111222333 %}".replace(/999888777/,pk.toString()).replace(/111222333/,row[1].toString());
         					console.log(invoiceUrl);
-        					return `<a href="`+invoiceUrl+`">`+row[1]+`</a>`	},
+        					return `<a href="`+invoiceUrl+`">`+data+`</a>`	},
         					"targets":[0,1],
         				}
         				]
@@ -192,6 +199,22 @@
       }
     });
   }
+</script>
+<script type="text/javascript">
+	function clickedIconContact(pk,accountId){
+		console.log(pk);
+		console.log(accountId);
+		$('#exampleModalCenterContactNote').on('shown.bs.modal',function(){
+			
+			$('input[name="note-form-contact-id"]').val(pk);
+			console.log($('input[name="note-form-contact-id"').value());
+			//<input type="hidden" name="email-form-for-contacts-contact-id" value="">			
+		});
+		$('#emailFormModalForContacts').on('shown.bs.modal',function(){
+			$('input[name="email-form-for-contacts-contact-id"]').val(pk);
+		})
+		
+	}
 </script>
 <script type="text/javascript">
 	function clickedIcon(pk){
@@ -436,13 +459,15 @@
 				var contact = data["contact"];
 				console.log(contact);	
 				var id = data["contact"]["id"]
-				console.log(data["contact"]["id"]);
+				var accountId = data["contact"]["account"]["id"];
+				var contactUrl = "{% url 'contact_management:contact_detail' account_id=999888777 pk=111222333 %}".replace(/999888777/,accountId.toString()).replace(/111222333/,pk.toString()); 
+				var updateContactUrl = "{% url 'contact_management:contact_update' account_id=999888777 pk=111222333 %}".replace(/999888777/,accountId.toString()).replace(/111222333/,pk.toString());		
 				//var id = data["contact"]["id"];
 				//notes = data["account"]["notes"];
 				//console.log(notes);
 				//invoices = data["account"]["invoices"];
 				$('#account-actions').append(`<div class="card-body" id="account-actions-body"'><div class="card-title">account actions</div></div>`);
-				$('#account-actions-body').append('<div class="d-flex flex-row justify-content-center"><div class="d-flex flex-column justify-content-center"><div class="p-2" id="contact-name"></div><div class="p-2" id="account-name"></div><div class="p-2" id="account-website"></div><div class="p-2" id="account-address"></div><div class="p-2" id="account-city-state"></div><div class="p-2" id="account-phone"></div></div></div></div><div class="d-flex flex-row justify-content-around" id="account-actions-icons"><div class="p-2"><a data-toggle="modal" data-target="#exampleModalCenter" href="#exampleModalCenter" id="account-add-note"><i class="mdi  mdi-comment-plus-outline icon-md mr-3" id="account-add-note-icon" onclick="clickedIcon('+id+')"></i></a></div><div class="p-2"><a data-toggle="modal" data-target="#addContactFormModal" href="#addContactFormModal"><i class="mdi  mdi-account-multiple-plus icon-md mr-3" onclick="clickedIcon('+id+')"></i></a></div><div class="p-2"><a data-toggle="modal" data-target="#emailFormModal" href="#emailFormModal"><i class="mdi  mdi-email icon-md mr-3" onclick="clickedIcon('+id+')"></i></a></div><div class="p-2"><a data-toggle="modal" data-target="#accountUpdateModal" href="#accountUpdateModal"><i class="mdi mdi-pencil icon-md mr-3"></i></a></div><div class="p-2"><a href="./accounts/'+id+'/detail"><i class="mdi mdi-account-card-details icon-md mr-3"></i></a></div></div>');
+				$('#account-actions-body').append('<div class="d-flex flex-row justify-content-center"><div class="d-flex flex-column justify-content-center"><div class="p-2" id="contact-name"></div><div class="p-2" id="account-name"></div><div class="p-2" id="account-website"></div><div class="p-2" id="account-address"></div><div class="p-2" id="account-city-state"></div><div class="p-2" id="account-phone"></div></div></div></div><div class="d-flex flex-row justify-content-around" id="account-actions-icons"><div class="p-2"><a data-toggle="modal" data-target="#exampleModalCenterContactNote" href="#exampleModalCenter" id="account-add-note"><i class="mdi  mdi-comment-plus-outline icon-md mr-3" id="account-add-note-icon" onclick="clickedIconContact('+id+','+accountId+')"></i></a></div><div class="p-2"><a data-toggle="modal" data-target="#emailFormModalForContacts" href="#emailFormModal"><i class="mdi  mdi-email icon-md mr-3" onclick="clickedIconContact('+id+','+accountId+')"></i></a></div><div class="p-2"><a href="'+updateContactUrl+'"><i class="mdi mdi-pencil icon-md mr-3"></i></a></div><div class="p-2"><a href="'+contactUrl+'"><i class="mdi mdi-account-card-details icon-md mr-3"></i></a></div></div>');
 				$('#contact-name').append(`<h3 style="text-align: center;">${contact["full_name"]||""}</h3>`)
 				$('#account-name').append(`<h5 style="text-align: center;">${contact["account"]["name"]||""}</h5>`);
 				$('#account-address').append(`<p>${contact["account"]["billing_street"]||""}</p>`);

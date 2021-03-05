@@ -19,7 +19,7 @@ from django.views.generic import (
     View,
 )
 from .filters import AccountFilter,ContactFilter,LeadFilter,ItemFilter,InvoiceFilter
-from .forms import NoteForm,EmailForm,AddContactForm,AccountModalForm
+from .forms import NoteForm,EmailForm,AddContactForm,AccountModalForm,ContactModalForm,CreateEmailCampaignForm
 from .models import *
 from .tables import AccountTable,ContactTable,LeadTable,ItemTable,InvoiceTable
 
@@ -31,7 +31,7 @@ def test(request):
     context = {}
     return render(request,'contact_management/test.html',context)
 def accounts(request):
-    context = {'accounts':Account.objects.all().order_by('name'),'note_form':NoteForm,'email_form':EmailForm,'add_contact_form':AddContactForm,'form':AccountModalForm,}    
+    context = {'accounts':Account.objects.all().order_by('name'),'note_form':NoteForm,'email_form':EmailForm,'add_contact_form':AddContactForm,'form':AccountModalForm,'contact_form':ContactModalForm,'campaign_form':CreateEmailCampaignForm,}    
     return render(request,'contact_management/accounts.html',context)
 
 #PAGE FEEDS
@@ -60,7 +60,7 @@ def contact_feed(request,contact_id):
     contact_info["full_name"]=contact.full_name
     contact_info["account"]={x:y for x,y in contact.account.__dict__.items() if x!='_state'}
     contact_info["contacts"] = [{x:y for x,y in c.__dict__.items() if x!='_state'} for c in Contact.objects.filter(account=contact.account).exclude(pk=contact.pk)]
-    contact_info["notes"] = [{x:y for x,y in n.__dict__.items() if x != '_state'} for n in Note.objects.filter(Q(contact=contact)|Q(account=contact.account))]
+    contact_info["notes"] = [{x:y for x,y in n.__dict__.items() if x != '_state'} for n in Note.objects.filter(Q(contact=contact)|Q(account=contact.account)).order_by('-date')]
     contact_info["invoices"] = [{x:y for x,y in i.__dict__.items() if x != '_state'} for i in Invoice.objects.filter(account=contact.account)]
 
     return JsonResponse({"contact":contact_info},safe=False)
@@ -213,7 +213,7 @@ class ContactDetailView(LoginRequiredMixin,DetailView):
         context['note_form'] = NoteForm
         context['email_form'] = EmailForm
         return context
-'''
+
 class ContactUpdateView(LoginRequiredMixin,UpdateView):
     model = Contact
     fields = '__all__'
@@ -226,7 +226,7 @@ class ContactUpdateView(LoginRequiredMixin,UpdateView):
         form.fields["account"].required=False
 
         return form
-
+'''
 class LeadListView(LoginRequiredMixin,SingleTableMixin,FilterView):
     login_url = 'contact_management:login'
     model = Lead
@@ -339,19 +339,22 @@ def add_contact(request,form_data):
     else:
         return JsonResponse({"error":"error",},safe=False)
 '''
+'''
 @login_required(login_url='contact_management:login')
 def note_delete(request,note_id):
     note = Note.objects.get(pk=note_id)
     note.delete()
     return redirect(request.META['HTTP_REFERER']) 
 '''
+'''
 @login_required(login_url='contact_management:login')
 def send_email_form(request,form_data):
     #send_email(self,subject=None,body=None,sg_template_on=False,sg_template=None,template=None,campaign=None):
     if request.is_ajax and request.method == 'POST':
         jform = json.loads(form_data)
+        contact_id = jform.get('contact_id',None)
         j = [v for k,v in jform.items() if 'contact-checkbox' in k]       
-        contacts = Contact.objects.filter(pk__in=[v for k,v in jform.items() if 'contact-checkbox' in k])        
+        contacts = Contact.objects.filter(Q(pk__in=[v for k,v in jform.items() if 'contact-checkbox' in k]+[contact_id]))        
         leads = Lead.objects.filter(pk__in=[v for k,v in jform.items() if 'lead-checkbox' in k])
         subject = jform.get("subject",None)
         body = jform.get("body",None)

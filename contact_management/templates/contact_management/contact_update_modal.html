@@ -1,0 +1,66 @@
+{% load bootstrap4 %}
+<div class="modal fade" id="contactUpdateModal" tabindex="-1" role="dialog" aria-labelledby="accountUpdateModal" aria-hidden="true">
+<form method="post" id="add-contact-form">
+      {% csrf_token %}
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="updateAccountLongTitle">Update Account</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">      	
+
+
+      
+                <form method="post" action="">
+        {% csrf_token %}
+        <div class="row">
+          <div class="col-sm-6">
+            {% bootstrap_field contact_form.first_name %}
+          </div>
+          <div class="col-sm-6">
+            {% bootstrap_field contact_form.last_name %}
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-sm-3">
+            {% bootstrap_field contact_form.phone %}
+          </div>
+          <div class="col-sm-3">
+            {% bootstrap_field contact_form.email %}
+          </div>
+          <div class="col-sm-3">
+            {% bootstrap_field contact_form.assigned_to %}
+          </div>
+          <div class="col-sm-3">
+            {% bootstrap_field contact_form.follow_up_date %}
+          </div>        
+        </div>
+        <div class="row">
+          <div class="col-sm-6">
+          {% bootstrap_field contact_form.description %}
+          </div>
+          <div class="col-sm-6">
+          {% bootstrap_field contact_form.account %}
+          </div>
+        </div>
+
+
+
+        <input class="btn btn-lg btn-primary" type="submit" value="Submit">
+    </form>
+
+           
+
+        </div>
+        <div class="modal-footer">
+        	<input type="hidden" name="account_id" value="{{object.pk}}">
+         <input class="btn btn-primary" type="submit" value="Add Contact" />
+         
+        </div>
+      </div>
+    </div>
+  </form>
+</div>
