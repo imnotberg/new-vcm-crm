@@ -39,22 +39,23 @@ def accounts_feed(request):
     #accounts = serializers.serialize("json",Account.objects.all())
     #tags = serializers.serialize("json",Tag.objects.all())
     accounts = [{"id":a.id,"name":a.name,"phone":a.phone,"email":a.email,"city":a.billing_city,"state":a.billing_state,"contacts":[c.full_name for c in a.contacts.all().order_by('last_name')],"tags":', '.join([t.name for t in a.tags.all()]),"button":f"<button class='form-control' onclick='selectAccount({a.id})'>View</button>"} for a in Account.objects.all()]
-    print(accounts) 
     return JsonResponse({'accounts':accounts,},safe=False)
 def account_feed(request,account_id):
     
     account = Account.objects.get(pk=account_id)
     account_info = {x:y for x,y in account.__dict__.items() if x!='_state'}
-    account_info["notes"] = [{"date":n.date,"user":n.user,"note":n.note} for n in account.notes.all().order_by('-date')]
-    account_info["invoices"]=[{'date':i.date,'number':i.number,'total':i.total,} for i in account.invoices.all()]
+    account_info["notes"] = [{"date":n.date,"user":n.user.username,"note":n.note} for n in account.notes.all().order_by('-date')]
+    account_info["invoices"]=[{'date':i.date,'number':i.number,'total':i.total,'account_id':i.account.id,} for i in account.invoices.all()]
     account_info["contacts"]=[{'full_name':c.full_name,'phone':c.phone,'email':c.email,'id':c.id,} for c in account.contacts.all()]
     account_info["logo"] = account.logo
     return JsonResponse({"account":account_info})
+def contacts_feed(request):
+    contacts = [{"id":c.id,"first_name":c.first_name,"last_name":c.last_name,"phone":c.phone,"email":c.email,"account_name":c.account.name,"account_id":c.account.id,"city":c.account.billing_city,"state":c.account.billing_state,"full_name":c.full_name,"notes":[{"date":n.date,"note":n.note} for n in c.notes.all().order_by('-date')]} for c in Contact.objects.all().order_by('last_name')]
+
+    return JsonResponse({"contacts":contacts},safe=False)
 
 #SEARCH FEEDS
-def accounts_search(request,query):
-    accounts = Account.objects.filter(Q(id__icontains=query)|Q(name__icontains=query)|Q(tags__name__icontains=query)|Q(billing_state__icontains=query)|Q(billing_city__icontains=query)).distinct()
-    return JsonResponse({"accounts":serializers .serialize("json",accounts)},safe=False)
+
 #TABLES AND CHARTS
 
 '''

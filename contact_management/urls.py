@@ -11,8 +11,8 @@ urlpatterns = [
 	path('accounts',views.accounts,name='accounts'),
 	#FEEDS
 	path('accounts-feed',views.accounts_feed,name='accounts_feed'),
-	path('accounts-search/query/<query>',views.accounts_search,name='accounts_search'),
 	path('account-feed/account-id/<account_id>',views.account_feed,name='account_feed'),
+	path('contacts-feed',views.contacts_feed,name="contacts_feed"),
 	#CBV
 	path('accounts/<pk>/detail/',views.AccountDetailView.as_view(),name='account_detail'),
 	path('contacts/account/<account_id>/contact/<pk>/detail',views.ContactDetailView.as_view(),name='contact_detail'),
