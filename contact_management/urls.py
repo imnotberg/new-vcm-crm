@@ -6,25 +6,44 @@ from . import views
 app_name = 'contact_management'
 
 urlpatterns = [
+	#AUTHENTICATION
+	path('logout',views.logout_request,name='logout'),
+	path("login", views.login_request, name="login"),
+	path('',views.index,name='index'),
 	#PAGES
 	path('test',views.test,name='test'),
 	path('accounts',views.accounts,name='accounts'),
+		path('email-campaign/campaign-id/<pk>',views.email_campaign_detail_view,name='email_campaign_detail_view'),
+		path('email-campaign/campaign_id/<pk>/edit',views.EmailCampaignUpdateView.as_view(),name='email_campaign_update_view'),
 	#FEEDS
 	path('accounts-feed',views.accounts_feed,name='accounts_feed'),
 	path('account-feed/account-id/<account_id>',views.account_feed,name='account_feed'),
 	path('contacts-feed',views.contacts_feed,name="contacts_feed"),
 	path('contact-feed/contact-id/<contact_id>',views.contact_feed,name='contact_feed'),
+	path('campaign-ajax/campaign-id/<campaign_id>',views.campaign_ajax,name='campaign_ajax'),
+	path('email-contacts-feed',views.email_contacts_feed,name='email_contacts_feed'),	
+	#path('notes-main-account-feed/account-id/<account_id>',views.notes_main_account_feed,name='notes_main_account_feed'),	
+	path('email-campaign-messages-feed/campaign-id/<campaign_id>/',views.email_campaign_messages_feed,name='email_campaign_messages_feed'),
+	#notes_main_add_note(request,contact_type,note,follow_up,follow_up_user,follow_up_type,follow_up_date_year,follow_up_date_month,follow_up_date_day):
+	#path('notes-main-add-note/<account_id>/<contact_type>/<note>/<follow_up>/<follow_up_user>/<follow_up_type>/<follow_up_date_year>/<follow_up_date_month>/<follow_up_date_day>',views.notes_main_add_note,name='notes_main_add_note'),
 	#CBV
 	path('accounts/<pk>/detail/',views.AccountDetailView.as_view(),name='account_detail'),
 	path('contacts/account/<account_id>/contact/<pk>/detail',views.ContactDetailView.as_view(),name='contact_detail'),
 	path('account/<account_id>/invoice/<pk>/detail',views.InvoiceDetailView.as_view(),name='invoice_detail'),
 	path('contacts/account/<account_id>/contact/<pk>/update',views.ContactUpdateView.as_view(),name='contact_update'),
 	#ACTIONS
+	path('ajax-add-contact-to-campaign/campaign_id/<campaign_id>/contact-type/<contact_type>/contact-pk/<contact_pk>',views.ajax_add_contact_to_campaign,name='ajax_add_contact_to_campaign'),
+	path('add-contact-to-campaign-ajax/campaign-id/<campaign_id>/contact-type/<contact_type>/contact_pk/<contact_pk>',views.add_contact_to_campaign_ajax,name='add_contact_to_campaign_ajax'),
 	path('accounts/<account_id>/contact/<contact_id>/make-primary',views.make_primary_contact,name='make_primary_contact'),
 	path('contacts/<contact_id>/remove',views.remove_contact,name='remove_contact'),
 	path('note-delete/<note_id>',views.note_delete,name='note_delete'),
+	path('create-email-campaign',views.EmailCampaignFormView.as_view(),name='create_email_campaign'),
+	path('send-email-campaign/campaign_id/<campaign_id>',views.send_email_campaign,name='send_email_campaign'),
+	path('send-test-email-campaign/campaign_id/<campaign_id>',views.send_test_email_campaign,name='send_test_email_campaign'),
+
 	#OLD
 	path('accounts/<pk>/update',views.AccountUpdateView.as_view(),name='account_update'),
+	path('email-contact-redirect/type/<contact_type>/id/<id>',views.email_contact_redirect,name='email_contact_redirect'),
 	#FORM URLS
 	path('note-create/<form_data>',views.note_create,name='note_create'),
 	path('send-email-form/<form_data>',views.send_email_form,name='send_email_form'),

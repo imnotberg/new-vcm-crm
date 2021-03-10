@@ -159,6 +159,7 @@ SERVER_EMAIL = os.environ.get('SERVER_EMAIL',None)
 ANYMAIL_WEBHOOK_SECRET = os.environ.get('ANYMAIL_WEBHOOK_SECRET',None)
 GITHUB_WEBHOOK_KEY = os.environ.get('GITHUB_WEBHOOK_KEY',None)
 EMAIL_PORT = 587
+LOGIN_REDIRECT_URL = 'contact_management:index'
 
 import dj_database_url
 db_from_env = dj_database_url.config()

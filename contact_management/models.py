@@ -336,6 +336,62 @@ class EmailCampaign(models.Model):
 		return f"{self.date}: {self.description}"
 	def get_absolute_url(self):
 		return reverse('contact_management:email_campaign_detail_view',kwargs={'pk':self.pk})
+	def send_test_email(self):
+		if self.sent == False:
+			subject = self.subject
+			body = None
+			if self.sg_template_on == True:
+				sg_template = self.template
+				template = None
+			else:
+				sg_template = None
+				template = self.template
+			c = Contact.objects.get(pk=24144)
+			c.send_email(subject,body,self.sg_template_on,sg_template,template,self.id)
+	def send_emails(self):
+		import time
+		if self.sent == False:
+			subject = self.subject
+			body = None
+			if self.sg_template_on == True:
+				sg_template = self.template
+				template = None
+			else:
+				sg_template = None
+				template = self.template
+			for a in self.accounts.all():
+				try:
+					a.send_email(subject,body,self.sg_template_on,sg_template,template,self.id)
+				except:
+					print('not sent to ',a)
+					pass
+				time.sleep(1)
+			for c in self.contacts.all():
+				try:
+					c.send_email(subject,body,self.sg_template_on,sg_template,template,self.id)
+					print(f"sent email to {c}")		
+				except:
+					print('not sent to', c)
+					pass
+				time.sleep(1)
+			for l in self.leads.all():
+				try:
+					l.send_email(subject,body,self.sg_template_on,sg_template,template,self.id)	
+					print(f"sent email to {l}")
+				except:
+					print('not sent to l', l)
+				time.sleep(1)
+			self.sent = True
+			self.save()
+	@property
+	def data(self):
+		raw_data = SendGridInfoData.objects.get(pk=1)
+		email_data = raw_data.messages
+		sample = email_data[email_data['CAMPAIGN']==str(self.pk)]
+		stats = sample_stats(sample).iloc[0]
+		activity = raw_data.data[raw_data.data.CAMPAIGN==str(self.id)].sort_values(by=['DATETIME'],ascending=False)
+
+		return {'messages':sample,'stats':stats,'activity':activity,}
 	
 class OrderItem(models.Model):
 	order_item = models.ForeignKey(Item,on_delete=models.CASCADE,related_name='order_item_order_item')
@@ -360,6 +416,7 @@ class SendGridInfoData(models.Model):
 		stats = df({'SENT':[len(data)],'DELIVERED':[data.DELIVERED.sum()],"OPENED":[data.OPENED.sum()],"CLICKED":[data.CLICKED.sum()],"UNSUBSCRIBED":[data.UNSUBSCRIBED.sum()],"BOUNCED":[data.BOUNCED.sum()],"DEFERRED":[data.DEFERRED.sum()],"DROPPED":[data.DROPPED.sum()],"UNIQUE_OPENS":[sum(data.OPENED.value_counts().to_list())],"UNIQUE_CLICKS":[sum(data.CLICKED.value_counts().to_list())]},index=['STATS'])
 		return stats
 
+
 class Tag(models.Model):
 	name = models.CharField(max_length=200)
 
@@ -375,8 +432,13 @@ class EmailData:
 	def __init__(self):
 		data = SendGridInfoData.objects.using('email').get(pk=1).data
 		self.data = data[data.email_source=='VCM']
+
 class EmailList:
-	pass
+	def __init__(self):
+		self.list = pd.concat([df(Contact.objects.filter(email__isnull=False).exclude(email='').exclude(account__customer_type='DS').annotate(type=Value('CONTACT',CharField()),full_name=Concat('first_name',Value(' '),'last_name')).values('pk','first_name','last_name','email','account__id','account__name','type','full_name','account__billing_state')).rename(columns={'account__name':'account','account__billing_state':'state'}),df(Lead.objects.filter(email__isnull=False).exclude(email='').annotate(type=Value('LEAD',CharField()),full_name=Concat('first_name',Value(' '),'last_name')).values('pk','first_name','last_name','email','account_name','type','full_name','state')).rename(columns={'account_name':'account'}),df(Account.objects.filter(email__isnull=False).exclude(email='').exclude(customer_type='DS').annotate(type=Value('ACCOUNT',CharField())).values('pk','email','id','name','type','billing_state')).rename(columns={'name':'account','billing_state':'state'})]).drop_duplicates(subset=['email'],keep='first')		
+		self.leads = self.list[self.list['type']=='LEAD']
+		self.contacts = self.list[self.list['type']=='CONTACT']
+		self.account = self.list[self.list['type']=='ACCOUNT']
 
 class SEO:
 	def __init__(self,company,website):
@@ -461,3 +523,26 @@ def handle_bounce(sender, event, esp_name, **kwargs):
 	if df(pandafy(event)).empty == False:
 		data.data = data.data.append(pandafy(event),ignore_index=True)
 	data.save()
+def sample_stats(sample):
+	messages = sample
+	sent = len(messages)
+	delivered = messages.DELIVERED.sum()
+	opens = messages.OPENED.sum()
+	clicks = messages.CLICKED.sum()
+	bounces = messages.BOUNCED.sum()
+	unsubscribes = messages.UNSUBSCRIBED.sum()
+	unique_opens = len(messages[messages['OPENED']>0])
+	unique_clicks = len(messages[messages['CLICKED']>0])
+	if sent > 0:
+		pct_unique_opens = unique_opens/sent
+		pct_unique_clicks = unique_clicks/sent
+		pct_bounce = bounces/sent
+		pct_unsubscribe = unsubscribes/sent
+		pct_delivered = delivered/sent 
+	else:
+		pct_unique_opens = 0
+		pct_unique_clicks = 0
+		pct_bounce = 0
+		pct_unsubscribe = 0
+		pct_delivered = 0
+	return df([[sent,delivered,opens,clicks,bounces,unsubscribes,unique_opens,unique_clicks,pct_unique_clicks,pct_unique_opens,pct_bounce,pct_unsubscribe,pct_delivered]],columns=['sent','delivered','opens','clicks','bounces','unsubscribes','unique_opens','unique_clicks','pct_unique_clicks','pct_unique_opens','pct_bounce','pct_unsubscribe','pct_delivered'])

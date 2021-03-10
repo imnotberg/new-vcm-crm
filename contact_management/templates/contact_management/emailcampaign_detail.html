@@ -1,0 +1,527 @@
+{% extends 'contact_management/base.html' %}
+{% load bootstrap4 %}
+{% load extras %}
+{% load render_table from django_tables2 %}
+{% block content %}
+<style type="text/css">
+.anyClass {
+  height:1000px;
+  overflow-y: scroll;
+}
+.table-line {
+	line-height: 20px;
+}
+</style>
+{
+<div class="content-wrapper">	
+	<div class="row">		
+		<div class="col-sm-4">
+			<div class="card">
+				<div class="card-body">						
+					<div class="card-title">email campaign details</div>
+						
+					<div class="table-responsive-sm">
+						<table class="table table-sm table-hover">
+							<tr>
+								<th>SUBJECT</th>
+								<td>{{object.subject}}</td>
+							</tr>
+							<tr>
+								<th>DATE</th>
+								<td>{{object.date}}</td>
+							</tr>
+							<tr>
+								<th>DESCRIPTION</th>
+								<td>{{object.description}}</td>
+							</tr>
+							<tr>
+								<th>TEMPLATE</th>
+								<td>{{object.template}}</td>
+							</tr>
+							<tr>
+								<th>CONTACTS</th>
+								<td>{{object.contacts.all|length}}</td>
+							</tr>
+							<tr>
+								<th>LEADS</th>
+								<td>{{object.leads.all|length}}</td>
+							</tr>
+							<tr>
+								<th>ACCOUNTS</th>
+								<td>{{object.accounts.all|length}}</td>
+							</tr>
+							<tr>
+								<th>EDIT</th>
+								<td><a href="{% url 'contact_management:email_campaign_update_view' pk=object.pk %}"><i class="mdi mdi-pencil icon-md mr-3"></i></a></td>
+							</tr>
+							<tr>
+								<th>OTHER CAMPAIGNS</th>
+								<td>
+									<div class="dropdown show">
+							  <a class="btn btn-secondary btn-sm dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+							    SELECT
+							  </a>
+
+							  <div class="dropdown-menu" aria-labelledby="dropdownMenuLink">
+							  	{% if campaigns %}
+							  	{% for c in campaigns %}
+							    <a class="dropdown-item" href="{% url 'contact_management:email_campaign_detail_view' c.pk %}">{{c.date}}: {{c.description}}</a>
+							    {% endfor %}
+							    {% endif %}
+							  </div>
+						</div>
+								</td>
+							</tr>
+						</table>
+					</div>
+				</div>
+			</div>
+			{% if object.sent == False %}
+			<div class="card anyClass">
+				<div class="card-body">
+					<div class="card-title">Campaign Contacts</div>
+					{% if object.sent == False %}
+					<a href="{% url 'contact_management:send_email_campaign' object.pk %} " class="btn btn-primary btn-sm" onclick="return confirm('send email to contacts?')">SEND EMAILS</a>
+					{% endif %}
+					<a href="{% url 'contact_management:send_test_email_campaign' object.pk %} " class="btn btn-primary btn-sm" onclick="return confirm('send test email to self?')">SEND TEST EMAIL</a>
+					
+						<div class="table-responsive-sm">
+							<table class="table table-sm table-hover" id="campaign-contacts">
+								<thead>
+									<tr>
+										<th>NAME</th>
+										<th>ACCOUNT</th>
+										<th>TYPE</th>
+									</tr>
+								</thead>
+								<tbody>
+									{% for t in object.targets %}
+									<tr>
+										<td>{{t.full_name}}</td>
+										<td>{{t.account_name}}</td>
+										<td>{{t.type}}</td>
+									</tr>
+									{% endfor %}
+								</tbody>
+							</table>
+						</div>
+				</div>
+			</div>
+			{% endif %}
+
+		</div>		
+		<div class="col-sm-8">
+			{% if object.sent == False %}
+			<div class="card">
+				<div class="card-body">
+					<div class="card-title">email filter</div>
+						{% if email_filter %}
+						<form action="" method="get">
+							{% csrf_token %}
+							<div class="row">
+								<div class="col-sm-3">
+									{% bootstrap_field email_filter.first_name size='small' %}
+								</div>
+								<div class="col-sm-3">
+									{% bootstrap_field email_filter.last_name size='small' %}
+								</div>
+								<div class="col-sm-3">
+									{% bootstrap_field email_filter.state size='small' %}
+								</div>
+								<div class="col-sm-3">
+									{% bootstrap_field email_filter.contact_type %}
+								</div>
+							</div>
+							<div class="row">{% bootstrap_button 'submit' %}
+								{% bootstrap_button 'reset' href='?' %}
+							</div>
+							
+						</form>
+						{% endif %}
+				</div>
+			</div>			
+			<div class="card anyClass">
+				<div class="card-body">
+					<div class="card-title">Email Contacts</div>
+						<div class="table-responsive-sm">
+							{% if filtered == True %}
+							<form method="post" action="." id="add-all-form">
+								{% csrf_token %}
+								
+								<input onclick="return confirm('you sure?')" type="submit" class="btn btn-sm btn-primary" name="submit" id="add-all-submit" value="Add All {{contacts|length}}">
+							</form>
+							{% endif %}	
+							<div class="table-responsive">
+								<form id="contacts-add-form" method="post">		{% csrf_token %} 
+									<table class="table table-bordered table-striped table-hover" id="contacts-table"  style="table-layout: fixed;">
+										<thead>
+											<tr>
+												<th><input type="checkbox" class="selectAll" name="selectAll" id="selectAll" value="all"> Select All</th>
+												<th>NAME</th>
+												<th>ACCOUNT</th>
+												<th>EMAIL</th>
+												<th>TYPE</th>
+												<th>STATE</th>
+												
+											</tr>
+										</thead>							 
+									 <tbody></tbody>
+									 <tfoot></tfoot>
+									</table>
+								</form>
+							</div>
+							<!--{% if table %}
+							{% render_table table %}
+							{% endif %}-->
+							
+						</div>					
+				</div>
+			</div>
+			{% endif %}
+			{% if object.sent == True %}
+			<div class="card">
+				<div class="card-body">
+					<div class="card-title">STATS</div>
+					<div class="table-responsive-sm">
+						<table class="table table-borderless table-sm" id="stats">
+							<thead>
+								<tr>
+									<th class="text-center">SENT</th>
+									<th class="text-center">DELIVERED</th>
+									<th class="text-center">OPENS</th>
+									<th class="text-center">UNIQUE OPENS</th>
+									<th class="text-center">CLICKS</th>
+									<th class="text-center">UNIQUE CLICKS</th>
+									<th class="text-center">UNSUBSCRIBE</th>
+									<th class="text-center">BOUNCE</th>
+								</tr>
+							</thead>
+							<tbody>
+
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div class="card anyClass">
+				<div class="card-body">
+					<div class="card-title">MESSAGES</div>					
+
+					<div class="table-responsive">
+						<table class="table table-sm table-hover" id="messages-table">
+							<thead>
+								<tr>
+									<th>NAME</th>
+									<th>COMPANY</th>
+									<th>OPENS</th>
+									<th>CLICKS</th>
+									<th>LINKS</th>
+									<th>BOUNCES</th>
+									<th>UNSUBSCRIBES</th>
+									<th>LAST</th>
+								</tr>
+							</thead>
+							<tbody>
+								
+							</tbody>
+							<tfoot></tfoot>
+						</table>
+						<!--
+						{% if message_table %}
+					{% render_table message_table %}
+					{% endif %}-->
+					</div>
+				</div>
+			</div>
+			{% endif %}
+		</div>
+	</div>
+</div>
+
+
+ <script>
+ 		function addContactToCampaign(campaign=1,contactType='CONTACT',contactPk=8540) {
+ 			let csrfValue = document.getElementsByName("csrfmiddlewaretoken")[0].value;
+ 			
+ 			if(campaign == null){
+ 				
+ 			}
+ 			var dj_url = "{% url 'contact_management:add_contact_to_campaign_ajax' campaign_id=123456789 contact_type='CONTACTTYPE' contact_pk=987654321 %}".replace(/123456789/,campaign.toString()).replace(/CONTACTTYPE/,contactType.toString()).replace(/987654321/,contactPk.toString())
+ 			
+ 			fetch(dj_url,{method:"Post",headers:{"X-CSRFToken": csrfValue,
+		        "X-Requested-With": "XMLHttpRequest"}}
+		        ).then(function(response) {
+		      return response.json();
+		    }).then(function(data) {
+		      
+		      //console.log(JSON.parse(data.new_contact));
+		      let instance = JSON.parse(data.new_contact);
+		      let fields = instance[0]["fields"]
+		      
+		      /*
+		      let instance = JSON.parse(data);
+		      let fields = instance[0]["fields"];
+		      let pk = instance[0]["pk"]
+		      let lead_instance = JSON.parse(data["lead"])
+		      let lead_fields = lead_instance[0]["fields"]
+		      let matchesList = document.querySelector(".matches");
+		      let noMatchesFlag= document.querySelector(".no-matches");
+		      if(noMatchesFlag) {
+		        matchesList.removeChild(noMatchesFlag);
+		      }
+		      */
+		      $("#campaign-contacts tbody").prepend(
+                    `<tr>                    
+                    <td>${fields["first_name"] ||""}</td>
+                    <td>${fields["last_name"] ||""}</td>
+                    <td>${fields["account"] ||""}</td>
+
+                    </tr>`
+               )
+		      
+
+		    }).catch((error) => {
+		      console.error("Error", error);
+		    })
+
+ 		}
+  		
+		   
+
+		  function submitLead(e) {
+		  	
+		    e.preventDefault();
+		    let content = document.querySelector("#id_account_name").value;
+		    if(content){
+		      let formData = new FormData(searchForm);
+		      searchAccounts(formData);
+		    }else {
+		      console.log("You cannot submit an empty form")
+		    }
+		  }
+
+		  function addContact(e) {
+		  	
+		  	e.preventDefault();
+		  	alert(cliecked_id)
+		  	let value = alert(clicked_id)
+		  	console.log(value)
+		  	}
+		  function addContactCampaign(campaign,contactType,contactPk){
+		  	let csrfValue = document.getElementsByName("csrfmiddlewaretoken")[0].value;
+		  	var dj_url = "{% url 'contact_management:ajax_add_contact_to_campaign' campaign_id=123456789 contact_type='CONTACTTYPE' contact_pk=987654321 %}".replace(/123456789/,campaign.toString()).replace(/CONTACTTYPE/,contactType.toString()).replace(/987654321/,contactPk.toString())
+		  	fetch(dj_url,{method:"Post",headers: {
+		        "X-CSRFToken": csrfValue,
+		        "X-Requested-With": "XMLHttpRequest"
+		      }},)
+		  }
+		  function addAllContacts(e){
+		  	e.preventDefault();
+		  	console.log("we are right here adding contacts!");
+		  	let campaign = "{{object.pk}}";
+		  	let contactIds = "{{contact_dict.contact_ids}}";
+		  	let cids = JSON.parse(contactIds);
+		  	console.log(cids);
+		  	let accountIds = "{{contact_dict.account_ids}}";
+		  	let aids = JSON.parse(accountIds);
+		  	console.log(aids)
+		  	let leadIds = "{{contact_dict.lead_ids}}";
+		  	let lids = JSON.parse(leadIds);
+		  	console.log(lids);
+
+
+		  	var i;
+				for (i = 0; i < aids.length; i++) {
+				addContactCampaign(campaign,'ACCOUNT',aids[i]);
+				}
+			var j;
+				for (j = 0; j < cids.length; j++) {
+				addContactCampaign(campaign,'CONTACT',cids[j]);
+				}
+			var k;
+			for (k = 0; k < lids.length; k++) {
+				addContactCampaign(campaign,'LEAD',lids[i]);
+				}
+
+
+		  }
+		  
+		  function getTarget(e){
+		  	e.preventDefault();
+		  	let campaignId = "{{object.pk}}" ;		  	
+		  	let pk = e.target.name;
+		  	console.log(e.target.name)
+		  	let type = e.target.getAttribute('contact_type');
+		  	console.log(campaignId)
+		  	addContactToCampaign(campaignId,type,pk)
+		  	
+		  }
+		  //let searchForm = document.getElementById("search-form");
+		  //searchForm.addEventListener("submit", submitLead);
+
+		  document.querySelectorAll('.form-button').forEach(item => {
+ 			 item.addEventListener('click', getTarget)
+
+ 		 let addAllForm = document.getElementById("add-all-form");
+		 addAllForm.addEventListener("submit", addAllContacts);
+
+  })
+
+</script>
+<script type="text/javascript">
+	function getTableRows(){
+		e.preventDefault();
+		let content = document.querySelector(".new-rows").value;
+
+	}
+	
+</script>
+<script>
+	function getData(){
+		let objectId = "{{object.pk}}";
+		
+		fetch("{% url 'contact_management:campaign_ajax' campaign_id=987654321 %}".replace(/987654321/,objectId.toString())).then(function(response) {
+		      return response.json();
+		    }).then(function(data) {		    	
+		    			    	
+		    	let stats = JSON.parse(data.stats);
+		    	 console.log('stats' + stats);  	
+		    	var i;
+		    	
+		    	
+		    	$("#stats tbody").prepend(
+		    		`
+		    		<tr>
+                    <td class="text-center">${stats["sent"] ||""}</td>
+                    <td class="text-center">${stats["delivered"] ||""}</td>
+                    <td class="text-center">${stats["opens"] ||""}</td>
+                    <td class="text-center">${stats["unique_opens"] ||""}</td>
+                    <td class="text-center">${stats["clicks"] ||""}</td>
+                    <td class="text-center">${stats["unique_clicks"] ||""}</td>
+                    <td class="text-center">${stats["unsubscribes"] ||""}</td>
+                    <td class="text-center">${stats["bounces"] ||""}</td>
+					</tr>
+					`
+               )
+                
+		    	
+  
+
+		  })
+	}
+	document.addEventListener("DOMContentLoaded", getData);
+</script>
+<script type="text/javascript">
+$(document).ready( function () {
+	$('#example tfoot th').each( function () {
+        var title = $(this).text();
+        $(this).html( '<input type="text" placeholder="Search '+title+'" />' );
+    } );
+	fetch("{% url 'contact_management:email_contacts_feed' %}",{}).then(function(response){
+			return response.json()
+	 // Setup - add a text input to each footer cell
+    $('#contacts-table tfoot th').each( function () {
+        var title = $(this).text();
+        $(this).html( '<input type="text" placeholder="Search '+title+'" />' );
+    } );
+	}).then(function(data){	
+		var emailList = JSON.parse(data["contacts"]);
+		console.log(emailList);
+		$('#contacts-table').DataTable({
+			select:true,
+			fixedHeader:true,			
+			pageLength:10,
+			data:emailList,
+			columns:[
+				{data:null,defaultContent:`<input type="checkbox">`,checkboxes:{'selectRow':true,}},
+				{data:"full_name"},
+				{data:"account"},
+				{data:"email"},
+				{data:"type"},
+				{data:"state"},
+				
+			],
+			columnDefs: [{'width':200,"targets":[0]}, {
+            orderable: false,
+            className: 'select-checkbox',
+            targets:   0
+        },
+         {
+                    render: function (data, type, full, meta) {
+                        return "<div class='text-wrap width-200'>" + data + "</div>";
+                    },
+                    targets: [2,3]
+                } ],
+        select: {
+            style:    'multi',
+            selector: 'td:first-child'
+        },
+        order: [[ 1, 'asc' ]]
+			
+			
+
+			
+		})
+	});
+	$('.dataTables_length').addClass('bs-select');
+	var objectId = "{{object.pk}}"
+	//$('#messages-table').DataTable().clear()||null;
+	    // Setup - add a text input to each footer cell
+
+	fetch("{% url 'contact_management:email_campaign_messages_feed' 999888777 %}".replace('999888777',objectId.toString()),{
+			}).then(function(response){
+				return response.json();
+			}).then(function(data){
+				console.log(JSON.parse(data["campaign"]))
+				var campaignInfo = JSON.parse(data["campaign"]);
+				$('#messages-table').removeAttr('width').DataTable(
+					{
+						"scrollY":        "300px",
+						"scrollX":        true,
+						"scrollCollapse": true,
+						pageLength:10,
+						data:campaignInfo,
+						"fixedColumns":true,
+						"fixedHeader":true,
+						"autoWidth":false,
+						columns:[
+							{data:'FIRST_NAME'},
+							{data:'ACCOUNT_NAME'},
+							{data:'OPENED'},
+							{data:'CLICKED'},
+							{data:'CLICKEDURL'},
+							{data:'BOUNCED'},
+							{data:'UNSUBSCRIBED'},
+							{data:'DATETIME'},
+						],
+						columnDefs:[
+							{"width":"15%",targets:[1,4]},
+							{
+								"targets":[0],
+								"render":function(data,type,row){
+									if(row["CONTACT_TYPE"]!==null&&row["CONTACT_ID"]!==null&&row["CONTACT_ID"]!==' '){var contactUrl = "{% url 'contact_management:email_contact_redirect' contact_type='CONTACT' id='XXXXXXXX' %}".replace('CONTACT',row["CONTACT_TYPE"].toString()).replace('XXXXXXXX',row["CONTACT_ID"]).toString();}else{contactUrl=""};
+									;
+									return `<a href="`+contactUrl+`">`+row['FIRST_NAME']+'   	'+row['LAST_NAME']+`</a>`
+								}
+							},
+							{
+							"searchable":false,
+							"targets":[2,3,4,5,6,7]
+							}
+						]
+					}
+
+					);
+
+
+
+			})
+});
+
+</script>
+
+
+
+
+
+{% endblock %}

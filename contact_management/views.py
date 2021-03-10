@@ -18,8 +18,9 @@ from django.views.generic import (
     UpdateView,
     View,
 )
+from formtools.wizard.views import SessionWizardView
 from .filters import AccountFilter,ContactFilter,LeadFilter,ItemFilter,InvoiceFilter
-from .forms import NoteForm,EmailForm,AddContactForm,AccountModalForm,ContactModalForm,CreateEmailCampaignForm
+from .forms import NoteForm,EmailForm,AddContactForm,AccountModalForm,ContactModalForm,CreateEmailCampaignForm,EmailCampaignForm1,EmailCampaignForm2,EmailCampaignForm3,EmailCampaignForm4
 from .models import *
 from .tables import AccountTable,ContactTable,LeadTable,ItemTable,InvoiceTable
 
@@ -69,7 +70,7 @@ def contact_feed(request,contact_id):
 
 #TABLES AND CHARTS
 
-'''
+
 def index(request):
 	context = {
 
@@ -86,18 +87,22 @@ def login_request(request):
             profile = Profile.objects.get(user=user)
             if user is not None:
                 login(request, user)
-                return redirect('contact_management:index')
+                try:
+                    return redirect(request.GET.get('next'))
+                except:
+                    return redirect('contact_management:index')
             else:
                 pass
         else:
             pass
     form = AuthenticationForm()
     return render(request,'contact_management/login.html',{'form':form,})
-
+'''
+'''
 def logout_request(request):
     logout(request)
     return redirect('contact_management:login')
-
+'''
 class AccountListView(LoginRequiredMixin,SingleTableMixin, FilterView):
     login_url = 'contact_management:login'
     model = Account
@@ -347,6 +352,80 @@ def note_delete(request,note_id):
     return redirect(request.META['HTTP_REFERER']) 
 '''
 '''
+def send_email_campaign(request,campaign_id):
+    campaign = EmailCampaign.objects.get(pk=campaign_id)
+    campaign.send_emails()
+
+    return redirect(campaign)
+def send_test_email_campaign(request,campaign_id):
+    campaign = EmailCampaign.objects.get(pk=campaign_id)
+    campaign.send_test_email()
+    print('sent test email!!!')
+
+    return redirect(campaign)
+
+def add_contact_to_campaign_ajax(request,campaign_id,contact_type,contact_pk):
+    if request.is_ajax and request.method == 'POST':
+        campaign = EmailCampaign.objects.get(pk=int(campaign_id))       
+        if contact_type == 'CONTACT':           
+            ser_contact = szers.serialize("json",[Contact.objects.get(pk=contact_pk),])         
+            contact = Contact.objects.get(pk=contact_pk)            
+            campaign.contacts.add(Contact.objects.get(pk=int(contact_pk)))      
+            
+            return JsonResponse({"new_contact":ser_contact},status=200)
+        
+        elif contact_type == 'LEAD':
+            print('we here')
+            ser_contact = szers.serialize("json",[Lead.objects.get(pk=contact_pk),])
+            print(ser_contact)
+            campaign.leads.add(Lead.objects.get(pk=int(contact_pk)))
+            return JsonResponse({"new_contact":ser_contact},status=200)
+        
+        elif contact_type == 'ACCOUNT':
+            ser_contact = szers.serialize("json",[Account.objects.get(pk=contact_pk)])
+            
+            campaign.accounts.add(Account.objects.get(pk=int(contact_pk)))
+            return JsonResponse({"new_contact":ser_contact},status=200)
+    else:
+        return JsonResponse({'error':'you did something incorrectly'},status=400)
+def ajax_add_contact_to_campaign(request,campaign_id,contact_type,contact_pk):
+    campaign = EmailCampaign.objects.get(pk=campaign_id)
+    if contact_type == 'ACCOUNT':
+        campaign.accounts.add(Account.objects.get(pk=contact_pk))
+    elif contact_type == 'CONTACT':
+        campaign.contacts.add(Contact.objects.get(pk=contact_pk))
+    elif contact_type == 'LEAD':
+        campaign.leads.add(Lead.objects.get(pk=contact_pk))
+
+    return JsonResponse({'complete':'task completed'})
+def campaign_ajax(request,campaign_id):
+    campaign = EmailCampaign.objects.get(pk=campaign_id)
+    data = campaign.data
+    activity = data['activity'].to_json(orient="records")
+    messages = data['messages'].to_json(orient="records")
+    stats = data['stats'].to_json()
+
+    json_data = {"activity":activity,"messages":messages,"stats":stats,}
+
+    return JsonResponse(json_data)
+def email_contacts_feed(request):
+    return JsonResponse({"contacts":EmailList().list.to_json(orient='records')})
+def email_campaign_messages_feed(request,campaign_id):
+    email = SendGridInfoData.objects.get(pk=1)
+    campaign = email.data[email.data.CAMPAIGN==str(campaign_id)].to_json(orient='records')
+
+    return JsonResponse({"campaign":campaign},safe=False)
+@login_required(login_url='contact_management:login')
+def email_contact_redirect(request,contact_type,id):
+    if contact_type == 'LEAD':
+        lead = Lead.objects.get(pk=id)
+        return redirect(lead)
+    elif contact_type == 'CONTACT':
+        contact = Contact.objects.get(pk=id)
+        return redirect(contact)
+    elif contact_type == 'ACCOUNT':
+        account = Account.objects.get(pk=id)
+        return redirect(account)
 @login_required(login_url='contact_management:login')
 def send_email_form(request,form_data):
     #send_email(self,subject=None,body=None,sg_template_on=False,sg_template=None,template=None,campaign=None):
@@ -417,6 +496,40 @@ def note_create(request,form_data):
         return JsonResponse({"new_note":new_note,})
     else:
         return JsonResponse({"not_data":"not_data"})
+
+class EmailCampaignFormView(LoginRequiredMixin,SessionWizardView):
+    login_url = 'contact_management:login'
+    template_name = 'contact_management/campaign_create_form.html'
+    form_list = [EmailCampaignForm1,EmailCampaignForm2,EmailCampaignForm3,EmailCampaignForm4]   
+
+    def done(self, form_list, **kwargs):
+        fd = [form.cleaned_data for form in form_list]
+        form_data = {k: v for list_item in fd for (k, v) in list_item.items()}
+        c = EmailCampaign(date=form_data['date'],description=form_data['description'],template=form_data['template'],sg_template_on=form_data['sg_template_on'],subject=form_data["subject"])
+        c.save()
+        return redirect(c)
+
+    def get(self, request, *args, **kwargs):
+        try:
+            return self.render(self.get_form())
+        except KeyError:
+            return super().get(request, *args, **kwargs)
+@login_required(login_url='contact_management:login')
+def email_campaign_detail_view(request,pk):
+    
+    object = EmailCampaign.objects.get(pk=pk)
+    contacts = EmailList().list
+    #contacts = contacts[~contacts['email'].isin(object.email_addresses)]
+    #data = object.data
+    #messages = data['messages']
+    filtered = False
+
+    context = {'campaigns':EmailCampaign.objects.all().order_by('-date'),'object':object,'contacts':contacts,}
+    return render(request,'contact_management/emailcampaign_detail.html',context)
+class EmailCampaignUpdateView(LoginRequiredMixin,UpdateView):
+    login_url = 'contact_management:login'
+    model = EmailCampaign
+    fields = ['subject','date','description','template','sg_template_on','sent']
 '''
 @login_required(login_url='contact_management:login')
 def delete_lead(request,pk):

@@ -64,3 +64,18 @@ class AddContactForm(ModelForm):
 		for field in self.fields:
 			self.fields[field].required = False
 		#self.fields['follow_up_date'].required = False
+
+
+class EmailCampaignForm1(forms.Form):
+	date = forms.DateField(widget=forms.SelectDateWidget(),initial=datetime.now())
+
+class EmailCampaignForm2(forms.Form):
+	description = forms.CharField(max_length=2000,required=False)
+	subject = forms.CharField(max_length=2000,required=False)
+
+class EmailCampaignForm3(forms.Form):
+	sg_template_on = forms.BooleanField(required=False)
+	
+class EmailCampaignForm4(forms.Form):
+	
+	template = forms.CharField(max_length=500,required=False)

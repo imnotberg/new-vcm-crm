@@ -3,56 +3,55 @@
 
 {% block content %}
 
-	<div class="content-wrapper">
+<div class="content-wrapper">
+	<div class="col-lg-12 grid-margin stretch-card">
+		<div class="card">
+			<div class="card-body">
+				<h4 class="card-title">EDIT ACCOUNT: {{account.name}}</h4>
 
-<div class="col-lg-12 grid-margin stretch-card">
-	<div class="card">
-		<div class="card-body">
-			<h4 class="card-title">EDIT ACCOUNT: {{account.name}}</h4>
-
-			<form method="post" action="">
-				{% csrf_token %}
-				<div class="row">
-					<div class="col-sm-9">
-						{% bootstrap_field form.name %}
+				<form method="post" action="">
+					{% csrf_token %}
+					<div class="row">
+						<div class="col-sm-9">
+							{% bootstrap_field form.name %}
+						</div>
+						<div class="col-sm-3">
+							{% bootstrap_field form.tags %}
+						</div>
 					</div>
-					<div class="col-sm-3">
-						{% bootstrap_field form.tags %}
+					<div class="row">
+						<div class="col-sm-3">
+							{% bootstrap_field form.contact_name %}
+						</div>
+						<div class="col-sm-3">
+							{% bootstrap_field form.phone %}
+						</div>
+						<div class="col-sm-3">
+							{% bootstrap_field form.email %}
+						</div>
+						<div class="col-sm-3">
+							{% bootstrap_field form.website %}
+						</div>				
 					</div>
-				</div>
-				<div class="row">
-					<div class="col-sm-3">
-						{% bootstrap_field form.contact_name %}
+					<div class="row">
+						<div class="col-sm-4">
+							{% bootstrap_field form.billing_street %}
+						</div>
+						<div class="col-sm-3">
+							{% bootstrap_field form.billing_city %}
+						</div>
+						<div class="col-sm-2">
+							{% bootstrap_field form.billing_state %}
+						</div>
+						<div class="col-sm-3">
+							{% bootstrap_field form.billing_postcode %}
+						</div>
 					</div>
-					<div class="col-sm-3">
-						{% bootstrap_field form.phone %}
-					</div>
-					<div class="col-sm-3">
-						{% bootstrap_field form.email %}
-					</div>
-					<div class="col-sm-3">
-						{% bootstrap_field form.website %}
-					</div>				
-				</div>
-				<div class="row">
-					<div class="col-sm-4">
-						{% bootstrap_field form.billing_street %}
-					</div>
-					<div class="col-sm-3">
-						{% bootstrap_field form.billing_city %}
-					</div>
-					<div class="col-sm-2">
-						{% bootstrap_field form.billing_state %}
-					</div>
-					<div class="col-sm-3">
-						{% bootstrap_field form.billing_postcode %}
-					</div>
-				</div>
-
 
 
-			  <input class="btn btn-lg btn-primary" type="submit" value="Submit">
-		</form>
+
+				  <input class="btn btn-lg btn-primary" type="submit" value="Submit">
+				</form>
 			</div>
 		</div>
 	</div>
