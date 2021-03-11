@@ -392,7 +392,21 @@ class EmailCampaign(models.Model):
 		activity = raw_data.data[raw_data.data.CAMPAIGN==str(self.id)].sort_values(by=['DATETIME'],ascending=False)
 
 		return {'messages':sample,'stats':stats,'activity':activity,}
+	def targetify(self):
+		targets = []
+		for l in self.leads.all():
+			targets.append( {"TYPE":"LEAD","ID":l.id,"ACCOUNT_NAME":l.account_name})
+		for c in self.contacts.all():
+			targets.append({"TYPE":"CONTACT","ID":c.id,"ACCOUNT_NAME":c.account_name})
+		for a in self.accounts.all():
+			targets.append({"TYPE":"ACCOUNT","ID":a.id,"ACCOUNT_NAME":a.account_name})
+		return targets
+
+	@property
+	def targets(self):
+		return self.targetify
 	
+		
 class OrderItem(models.Model):
 	order_item = models.ForeignKey(Item,on_delete=models.CASCADE,related_name='order_item_order_item')
 	quantity = models.IntegerField(null=True,blank=True)
