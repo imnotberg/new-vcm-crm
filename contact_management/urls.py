@@ -41,6 +41,9 @@ urlpatterns = [
 	path('create-email-campaign',views.EmailCampaignFormView.as_view(),name='create_email_campaign'),
 	path('send-email-campaign/campaign_id/<campaign_id>',views.send_email_campaign,name='send_email_campaign'),
 	path('send-test-email-campaign/campaign_id/<campaign_id>',views.send_test_email_campaign,name='send_test_email_campaign'),
+	path('datatable-test-email/campaign_id/<campaign_id>',views.datatable_send_test,name='datatable_send_test'),
+	path('add-contact-to-campaign-from-datatable/campaign-id/<campaign_id>/contact-type/<contact_type>/contact-id/<contact_id>',views.add_contact_to_campaign_from_datatable,name='add_contact_to_campaign_from_datatable'),
+	path('remove-contact-to-campaign-from-datatable/campaign-id/<campaign_id>/contact-type/<contact_type>/contact-id/<contact_id>',views.remove_contact_to_campaign_from_datatable,name='remove_contact_to_campaign_from_datatable'),
 
 	#OLD
 	path('accounts/<pk>/update',views.AccountUpdateView.as_view(),name='account_update'),

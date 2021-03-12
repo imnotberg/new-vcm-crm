@@ -359,10 +359,17 @@ def send_email_campaign(request,campaign_id):
     return redirect(campaign)
 def send_test_email_campaign(request,campaign_id):
     campaign = EmailCampaign.objects.get(pk=campaign_id)
+    print(campaign)
     campaign.send_test_email()
     print('sent test email!!!')
 
-    return redirect(campaign)
+    return JsonResponse({'success':'success'},safe=False)
+def datatable_send_test(request,campaign_id):
+    campaign = EmailCampaign.objects.get(pk=campaign_id)
+    campaign.send_test_email()
+    print('sent datattest email!!!')
+    return JsonResponse({'success':'success'},safe=False)
+
 
 def add_contact_to_campaign_ajax(request,campaign_id,contact_type,contact_pk):
     if request.is_ajax and request.method == 'POST':
@@ -597,3 +604,31 @@ def email_data(request):
 def campaign_contacts(request,campaign_id):
     campaign = EmailCampaign.objects.get(pk=campaign_id)
     return JsonResponse({"targets":campaign.targets()},safe=False)
+
+def add_contact_to_campaign_from_datatable(request,campaign_id,contact_type,contact_id):
+    campaign = EmailCampaign.objects.get(pk=campaign_id)
+    if contact_type == 'LEAD':
+        contact = Lead.objects.get(pk=contact_id) 
+        campaign.leads.add(contact)
+        return JsonResponse({"contact":{"ID":contact_id,"TYPE":"LEAD","NAME":contact.full_name,"ACCOUNT":contact.account_name}},safe=False)
+    elif contact_type == 'CONTACT':
+        contact = Contact.objects.get(pk=contact_id) 
+        campaign.contacts.add(contact)
+        return JsonResponse({"contact":{"ID":contact_id,"TYPE":"CONTACT","NAME":contact.full_name,"ACCOUNT":contact.account.name}},safe=False)
+def remove_contact_to_campaign_from_datatable(request,campaign_id,contact_type,contact_id):
+    campaign = EmailCampaign.objects.get(pk=campaign_id)
+    if contact_type == 'LEAD':
+        contact = Lead.objects.get(pk=contact_id) 
+        campaign.leads.remove(contact)
+        return JsonResponse({"contact":{"ID":contact_id,"TYPE":"LEAD","NAME":contact.full_name,"ACCOUNT":contact.account_name}},safe=False)
+    elif contact_type == 'CONTACT':
+        contact = Contact.objects.get(pk=contact_id) 
+        campaign.contacts.remove(contact)
+        return JsonResponse({"contact":{"ID":contact_id,"TYPE":"CONTACT","NAME":contact.full_name,"ACCOUNT":contact.account.name}},safe=False)
+
+    elif contact_type == 'ACCOUNT':
+        contact = Account.objects.get(pk=contact_id)
+        campaign.accounts.remove(account)
+        return JsonResponse({"contact":{"ID":contact_id,"TYPE":"ACCOUNT","NAME":contact.contact_name,"ACCOUNT":contact.name}},safe=False)
+
+

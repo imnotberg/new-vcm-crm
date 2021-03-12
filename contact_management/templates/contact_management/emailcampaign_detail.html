@@ -87,9 +87,10 @@
 								
 								<thead>
 									<tr>
+										<th></th>
+										<th>TYPE</th>
 										<th>NAME</th>
 										<th>ACCOUNT</th>
-										<th>TYPE</th>
 										<th>Remove</th>
 									</tr>
 								</thead>
@@ -122,13 +123,13 @@
 									<table class="table table-bordered table-striped table-hover" id="contacts-table"  style="table-layout: fixed;">
 										<thead>
 											<tr>
-												<th><input type="checkbox" class="selectAll" name="selectAll" id="selectAll" value="all"> Select All</th>
+												<th></th>
 												<th>NAME</th>
 												<th>ACCOUNT</th>
 												<th>EMAIL</th>
 												<th>TYPE</th>
 												<th>STATE</th>
-												
+												<th></th>
 											</tr>
 										</thead>							 
 									 <tbody></tbody>
@@ -206,20 +207,6 @@
 <script type="text/javascript">
 	$(document).ready(function(){
 		var campaignId = "{{object.pk}}"
-		 $('#example thead tr').clone(true).appendTo( '#example thead' );
-    $('#contacts-table thead tr:eq(1) th').each( function (i) {
-        var title = $(this).text();
-        $(this).html( '<input type="text" placeholder="Search '+title+'" />' );
- 
-        $( 'input', this ).on( 'keyup change', function () {
-            if ( table.column(i).search() !== this.value ) {
-                table
-                    .column(i)
-                    .search( this.value )
-                    .draw();
-            }
-        } );
-    });
 		Promise.all([
 			fetch("{% url 'contact_management:campaign_contacts' 123456789 %}".replace(/123456789/,campaignId.toString()),{}),
 			fetch("{% url 'contact_management:email_contacts_feed' %}",{})
@@ -232,11 +219,13 @@
 				}).then(function(data){
 					var targets = data[0]["targets"];
 					var contacts = JSON.parse(data[1]["contacts"]);
+
 					console.log(contacts);
 					var campaignContactsTable = $('#campaign-contacts').dataTable({
 						"destroy":true,
 						dom:"Blftrip",
 						pageLength:100,
+						fixedWidth:true,
 						fixedHeader:{
 							
 							header:true,
@@ -254,20 +243,25 @@
 							},
 							{
 								text:"SEND TEST EMAIL",
-								action:function(e,dt,node,config){}
+								action:function(e,dt,node,config){
+									confirm('would you like to send this email to yourself?');
+									console.log(campaignId);
+									fetch("{% url 'contact_management:datatable_send_test' 'XXXXX' %}".replace('XXXXX',campaignId.toString()),{});
+								}
 							}
 
 						],
 						data:targets,
 						columns:[
-							{"data":"TYPE"},
-							{"data":"CONTACT_NAME"},
-							{"data":"ACCOUNT_NAME","render":function(data,type,row,meta){return`<div class="text-wrap width="200">`+data+`</div>`}},
-							{"data":null,"render":function(e,dt,node,config){return `<button>REMOVE</button>`}}
+							{"data":"ID","visible":false,"defaultContent":'',},
+							{"data":"TYPE","defaultContent":'',},
+							{"data":"CONTACT_NAME","defaultContent":'',},
+							{"data":"ACCOUNT_NAME","render":function(data,type,row,meta){return`<div class="text-wrap width="200">`+data+`</div>`},"defaultContent":'',},
+							{"data":null,"defaultContent":'',"render":function(data,type,row,meta) {return `<a class="btn btn-danger" onclick="removeContactFromCampaign(`+campaignId+`,'`+row["TYPE"]+`',`+row["ID"]+`)">REMOVE</a>`}}
 							
 						]
 					});
-					var emailContactsTable = $('#contacts-table').dataTable({
+					var emailContactsTable = $('#contacts-table').DataTable({
 						"destroy":true,
 						dom:"Blftrip",
 						pageLength:100,
@@ -282,32 +276,81 @@
 							{"extend":"pdfHtml5","orientation":"landscape","title":"CAMPAIGN CONTACTS"},
 							"selectAll",
 							"selectNone",
+							{"text":"Add Filtered","action":function(e,dt,node,config){
+								var rowsSelected = emailContactsTable.rows(
+									{"search":"applied"});
+								rowsSelected.select();
+								
+							}
+						},
+							 {
+				                "text": 'Get selected data',
+				                "action": function () {
+				                	var table = $('#contacts-table').DataTable();
+				                    var rows = table.rows('.selected').data()
+				                	$(rows).each(function(i){
+				                		row = this;
+				                		addContactToCampaign(row["type"],row["pk"],campaignId);
+				                	})
+				                }
+				            },
 							
 
 						],
 						data:contacts,
 						columns:[
-							{"data":null,"defaultContent":''},
+							{"data":null,'searchable': false,
+         						'orderable': false,
+         						'width':"5%",
+         						'className': 'select-checkbox',
+         						'defaultContent':`<span></span>`,	
+         						
+        					 },
 							{"data":"full_name"},
 							{"data":"account","render":function(data,type,row,meta){return `<div class="text-wrap width="200">`+data+`</div>` }},
 							{"data":"email","render":function(data,type,row,meta){return `<div class="text-wrap width="200">`+data+`</div>`}},
-							{"data":"type"},
-							{"data":"state"}
+							{"data":"type","width":"7%"},
+							{"data":"state","width":"5%"},
+							{"data":null,"width":"5%","render":function(data,type,row,meta){
+								return `<a class="btn btn-danger" onclick="addContactToCampaign('`+row["type"]+`','`+row["pk"]+`','`+campaignId+`')">Add</a>`
+							}}
 							
 						],
 						orderCellsTop:true,
 						columnDefs: [{
 					         targets: 0,
-					         checkboxes:true,
-					         
+					         checkboxes:{selectRow:true,}					         
 					         
 					      }],
-					      'order':[[1,'asc']],
+					      
 					      select:{
 					      		style: 'multi',
 
-					      }
+					      },
+					      order:[[1,"asc"]]
 					})
+					$('.buttons-select-all').on("click",function(e){
+						var count = emailContactsTable.rows( { selected: true } ).count();
+						console.log(count);
+					})
+					 $('#contacts-table thead tr').clone(false).appendTo( '#contacts-table thead' );
+			   		 $('#contacts-table thead tr:eq(1) th').each( function (i) {
+			   		 	 if(i!==0 && i!==5){
+			        var title = $(this).text();
+			        $(this).html( '<input type="text" placeholder="Search '+title+'" />' );}
+			 
+			        $( 'input', this ).on( 'keyup change', function () {
+			            if ( emailContactsTable.column(i).search() !== this.value ) {
+			                emailContactsTable
+			                    .column(i)
+			                    .search( this.value )
+			                    .draw();
+			            }
+			        } );
+    				});
+					
+
+					
 				})
 			});
 		//try to do something with Promise.all([])
@@ -350,6 +393,38 @@
 			})
 		})
 	*/})
+</script>
+<script type="text/javascript">
+	function addContactToCampaign(type,id,campaign){
+		fetch_url = "{% url 'contact_management:add_contact_to_campaign_from_datatable' campaign_id=123456789 contact_type='CONTACTTYPE' contact_id=987654321 %}".replace(/123456789/,campaign.toString()).replace(/CONTACTTYPE/,type.toString()).replace(/987654321/,id.toString())
+		fetch(fetch_url,{
+
+		}).then(function(response){
+			return response.json();
+		}).then(function(data){
+
+			var newContact = data["contact"];
+			$('#campaign-contacts tbody').prepend(`<tr><td style="display:none;">>${newContact["ID"]||""}</td><td>${newContact["TYPE"]||""}</td><td>${newContact["NAME"]||""}</td><td>${newContact["ACCOUNT"]||""}</td><td><a class="btn btn-danger">REMOVE</a></td></tr>`)
+		}
+		)
+	}
+
+			 
+			
+</script>
+<script type="text/javascript">
+	function removeContactFromCampaign(campaign,type,id){
+			fetch_url = "{% url 'contact_management:remove_contact_to_campaign_from_datatable' campaign_id=123456789 contact_type='CONTACTTYPE' contact_id=987654321 %}".replace(/123456789/,campaign.toString()).replace(/CONTACTTYPE/,type.toString()).replace(/987654321/,id.toString())
+		fetch(fetch_url,{
+
+		}).then(function(response){
+			return response.json();
+		}).then(function(data){
+			$("#campaign-contacts").on("click", ".btn-danger", function() {
+   			$(this).closest("tr").remove();
+});
+		})
+	}
 </script>
 <!--
  <script>

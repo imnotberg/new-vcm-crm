@@ -117,7 +117,7 @@ class Contact(models.Model):
 	@property 
 	def model(self):
 		return self._meta.verbose_name
-	def send_email(self,subject=None,body=None,sg_template_on=False,sg_template=None,template=None,campaign=None):		
+	def send_email(self,subject=None,body=None,sg_template_on=False,sg_template=None,template=None,campaign=None):
 		from anymail.message import AnymailMessage
 		from django.core.mail import send_mail,EmailMultiAlternatives
 		from django.utils.html import strip_tags
@@ -137,9 +137,8 @@ class Contact(models.Model):
 		
 		message = EmailMultiAlternatives(subject,plain_content,DEFAULT_FROM_EMAIL,[self.email])
 
-		if sg_template_on == 'on':					
+		if sg_template_on == True:					
 			message.template_id = sg_template
-
 			template = sg_template
 			note = f"SENDGRID TEMPLATE {sg_template}"		
 
@@ -150,7 +149,10 @@ class Contact(models.Model):
 		message.track_clicks = True
 		message.track_opens = True
 		try:
+			print('we are here')
+			print(template)			
 			message.send()
+			print('we just sent??')
 			status = message.anymail_status
 			status.message_id
 			print(status.message_id,'MID!!')
@@ -159,7 +161,8 @@ class Contact(models.Model):
 			print(n,'NOTE')
 			n.save()
 			print(n.follow_up_date,'NOTE SAVED')
-		except:
+		except Exception as errors:
+			print(errors,'this is the erro!')
 			print('message did not send to',self)
 class Lead(models.Model):
 	title = models.CharField(pgettext_lazy("Treatment Pronouns for the customer", "Title"), max_length=64,null=True)
@@ -347,8 +350,10 @@ class EmailCampaign(models.Model):
 			else:
 				sg_template = None
 				template = self.template
-			c = Contact.objects.get(pk=24144)
+			c = Contact.objects.get(pk=26)
 			c.send_email(subject,body,self.sg_template_on,sg_template,template,self.id)
+			print(self.sg_template_on,sg_template)
+			print('successful testful')
 	def send_emails(self):
 		import time
 		if self.sent == False:
@@ -398,9 +403,9 @@ class EmailCampaign(models.Model):
 		for l in self.leads.all():
 			targets.append( {'TYPE':'LEAD','ID':l.id,'ACCOUNT_NAME':l.account_name,'CONTACT_NAME':l.full_name})
 		for c in self.contacts.all():
-			targets.append({"TYPE":"CONTACT","ID":c.id,"ACCOUNT_NAME":c.account_name,"CONTACT_NAME":c.full_name})
+			targets.append({"TYPE":"CONTACT","ID":c.id,"ACCOUNT_NAME":c.account.name,"CONTACT_NAME":c.full_name})
 		for a in self.accounts.all():
-			targets.append({'TYPE':"ACCOUNT","ID":a.id,"ACCOUNT_NAME":a.account_name,"CONTACT_NAME":a.contact_name})
+			targets.append({'TYPE':"ACCOUNT","ID":a.id,"ACCOUNT_NAME":a.name,"CONTACT_NAME":a.contact_name})
 
 		return targets
 

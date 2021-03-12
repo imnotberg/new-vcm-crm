@@ -50,7 +50,7 @@ class NoteForm(ModelForm):
 class EmailForm(forms.Form):
 	subject = forms.CharField(max_length=2000,required=False)
 	body = forms.CharField(widget=forms.Textarea(attrs={"rows":10,"cols":50}),required=False)
-	template = forms.ChoiceField(required=False,choices=utils.EMAIL_TEMPLATES)
+	template = forms.CharField(required=False,max_length=200)
 	sg_template_on = forms.BooleanField(required=False)
 	sg_template = forms.CharField(max_length=200,required=False)
 
