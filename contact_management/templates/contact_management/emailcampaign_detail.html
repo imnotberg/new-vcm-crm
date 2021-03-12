@@ -243,6 +243,8 @@
 							headerOffset:45,
 						},
 						buttons:[
+							"selectAll",
+							"selectNone",	
 							"copy",
 							"excel",
 							{"extend":"pdfHtml5","orientation":"landscape","title":"CAMPAIGN CONTACTS"},
@@ -278,6 +280,8 @@
 							"copy",
 							"excel",
 							{"extend":"pdfHtml5","orientation":"landscape","title":"CAMPAIGN CONTACTS"},
+							"selectAll",
+							"selectNone",
 							
 
 						],
@@ -292,6 +296,17 @@
 							
 						],
 						orderCellsTop:true,
+						columnDefs: [{
+					         targets: 0,
+					         checkboxes:true,
+					         
+					         
+					      }],
+					      'order':[[1,'asc']],
+					      select:{
+					      		style: 'multi',
+
+					      }
 					})
 				})
 			});
