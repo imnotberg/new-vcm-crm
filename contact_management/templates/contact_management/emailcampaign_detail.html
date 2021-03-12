@@ -80,10 +80,7 @@
 			<div class="card anyClass">
 				<div class="card-body">
 					<div class="card-title">Campaign Contacts</div>
-					{% if object.sent == False %}
-					<a href="{% url 'contact_management:send_email_campaign' object.pk %} " class="btn btn-primary btn-sm" onclick="return confirm('send email to contacts?')">SEND EMAILS</a>
-					{% endif %}
-					<a href="{% url 'contact_management:send_test_email_campaign' object.pk %} " class="btn btn-primary btn-sm" onclick="return confirm('send test email to self?')">SEND TEST EMAIL</a>
+
 					
 						<div class="table-responsive-sm">
 							<table class="table table-sm table-hover" id="campaign-contacts">
@@ -208,7 +205,98 @@
 </div>
 <script type="text/javascript">
 	$(document).ready(function(){
+		var campaignId = "{{object.pk}}"
+		 $('#example thead tr').clone(true).appendTo( '#example thead' );
+    $('#contacts-table thead tr:eq(1) th').each( function (i) {
+        var title = $(this).text();
+        $(this).html( '<input type="text" placeholder="Search '+title+'" />' );
+ 
+        $( 'input', this ).on( 'keyup change', function () {
+            if ( table.column(i).search() !== this.value ) {
+                table
+                    .column(i)
+                    .search( this.value )
+                    .draw();
+            }
+        } );
+    });
+		Promise.all([
+			fetch("{% url 'contact_management:campaign_contacts' 123456789 %}".replace(/123456789/,campaignId.toString()),{}),
+			fetch("{% url 'contact_management:email_contacts_feed' %}",{})
+			]).then(function(responses){
+				return Promise.all(responses.map(function(response){
+					return response.json();
+				})).then(function(data){
+					var loadData = data;
+					return loadData;
+				}).then(function(data){
+					var targets = data[0]["targets"];
+					var contacts = JSON.parse(data[1]["contacts"]);
+					console.log(contacts);
+					var campaignContactsTable = $('#campaign-contacts').dataTable({
+						"destroy":true,
+						dom:"Blftrip",
+						pageLength:100,
+						fixedHeader:{
+							
+							header:true,
+							headerOffset:45,
+						},
+						buttons:[
+							"copy",
+							"excel",
+							{"extend":"pdfHtml5","orientation":"landscape","title":"CAMPAIGN CONTACTS"},
+							{
+								text:"EMAIL CONTACTS",
+								action:function(e,dt,node,config){}
+							},
+							{
+								text:"SEND TEST EMAIL",
+								action:function(e,dt,node,config){}
+							}
+
+						],
+						data:targets,
+						columns:[
+							{"data":"TYPE"},
+							{"data":"CONTACT_NAME"},
+							{"data":"ACCOUNT_NAME","render":function(data,type,row,meta){return`<div class="text-wrap width="200">`+data+`</div>`}},
+							{"data":null,"render":function(e,dt,node,config){return `<button>REMOVE</button>`}}
+							
+						]
+					});
+					var emailContactsTable = $('#contacts-table').dataTable({
+						"destroy":true,
+						dom:"Blftrip",
+						pageLength:100,
+						fixedHeader:{
+							
+							header:true,
+							headerOffset:45,
+						},
+						buttons:[
+							"copy",
+							"excel",
+							{"extend":"pdfHtml5","orientation":"landscape","title":"CAMPAIGN CONTACTS"},
+							
+
+						],
+						data:contacts,
+						columns:[
+							{"data":null,"defaultContent":''},
+							{"data":"full_name"},
+							{"data":"account","render":function(data,type,row,meta){return `<div class="text-wrap width="200">`+data+`</div>` }},
+							{"data":"email","render":function(data,type,row,meta){return `<div class="text-wrap width="200">`+data+`</div>`}},
+							{"data":"type"},
+							{"data":"state"}
+							
+						],
+						orderCellsTop:true,
+					})
+				})
+			});
 		//try to do something with Promise.all([])
+		/*
 		var campaignId = "{{object.pk}}";
 		fetch("{% url 'contact_management:campaign_contacts' 123456789 %}".replace(/123456789/,campaignId.toString()),{
 
@@ -246,7 +334,7 @@
 				]
 			})
 		})
-	})
+	*/})
 </script>
 <!--
  <script>

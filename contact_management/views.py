@@ -409,6 +409,7 @@ def campaign_ajax(request,campaign_id):
 
     return JsonResponse(json_data)
 def email_contacts_feed(request):
+    
     return JsonResponse({"contacts":EmailList().list.to_json(orient='records')})
 def email_campaign_messages_feed(request,campaign_id):
     email = SendGridInfoData.objects.get(pk=1)
