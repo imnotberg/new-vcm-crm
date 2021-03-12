@@ -13,8 +13,8 @@ urlpatterns = [
 	#PAGES
 	path('test',views.test,name='test'),
 	path('accounts',views.accounts,name='accounts'),
-		path('email-campaign/campaign-id/<pk>',views.email_campaign_detail_view,name='email_campaign_detail_view'),
-		path('email-campaign/campaign_id/<pk>/edit',views.EmailCampaignUpdateView.as_view(),name='email_campaign_update_view'),
+	path('email-campaign/campaign-id/<pk>',views.email_campaign_detail_view,name='email_campaign_detail_view'),
+	path('email-campaign/campaign_id/<pk>/edit',views.EmailCampaignUpdateView.as_view(),name='email_campaign_update_view'),
 	#FEEDS
 	path('accounts-feed',views.accounts_feed,name='accounts_feed'),
 	path('account-feed/account-id/<account_id>',views.account_feed,name='account_feed'),
@@ -24,6 +24,7 @@ urlpatterns = [
 	path('email-contacts-feed',views.email_contacts_feed,name='email_contacts_feed'),	
 	#path('notes-main-account-feed/account-id/<account_id>',views.notes_main_account_feed,name='notes_main_account_feed'),	
 	path('email-campaign-messages-feed/campaign-id/<campaign_id>/',views.email_campaign_messages_feed,name='email_campaign_messages_feed'),
+	path('campaign-contacts/campaign-id/<campaign_id>',views.campaign_contacts,name='campaign_contacts'),
 	#notes_main_add_note(request,contact_type,note,follow_up,follow_up_user,follow_up_type,follow_up_date_year,follow_up_date_month,follow_up_date_day):
 	#path('notes-main-add-note/<account_id>/<contact_type>/<note>/<follow_up>/<follow_up_user>/<follow_up_type>/<follow_up_date_year>/<follow_up_date_month>/<follow_up_date_day>',views.notes_main_add_note,name='notes_main_add_note'),
 	#CBV

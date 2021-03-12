@@ -1,4 +1,5 @@
 from django.contrib.auth.models import User
+from django.core import serializers
 from django.db import models
 from django.db.models import JSONField
 from django.db.models.functions import ExtractWeek, ExtractYear, ExtractMonth,Concat
@@ -395,11 +396,12 @@ class EmailCampaign(models.Model):
 	def targetify(self):
 		targets = []
 		for l in self.leads.all():
-			targets.append( {"TYPE":"LEAD","ID":l.id,"ACCOUNT_NAME":l.account_name})
+			targets.append( {'TYPE':'LEAD','ID':l.id,'ACCOUNT_NAME':l.account_name,'CONTACT_NAME':l.full_name})
 		for c in self.contacts.all():
-			targets.append({"TYPE":"CONTACT","ID":c.id,"ACCOUNT_NAME":c.account_name})
+			targets.append({"TYPE":"CONTACT","ID":c.id,"ACCOUNT_NAME":c.account_name,"CONTACT_NAME":c.full_name})
 		for a in self.accounts.all():
-			targets.append({"TYPE":"ACCOUNT","ID":a.id,"ACCOUNT_NAME":a.account_name})
+			targets.append({'TYPE':"ACCOUNT","ID":a.id,"ACCOUNT_NAME":a.account_name,"CONTACT_NAME":a.contact_name})
+
 		return targets
 
 	@property

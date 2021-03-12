@@ -593,3 +593,6 @@ def email_data(request):
 
 
 '''
+def campaign_contacts(request,campaign_id):
+    campaign = EmailCampaign.objects.get(pk=campaign_id)
+    return JsonResponse({"targets":campaign.targets()},safe=False)
