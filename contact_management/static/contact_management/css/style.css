@@ -20881,7 +20881,7 @@ dl li {
 }
 
 .dataTables_wrapper label {
-  font-size: .8125rem;
+  font-size: .8250rem;
 }
 
 .dataTables_wrapper select {
@@ -20950,6 +20950,7 @@ dl li {
   white-space: nowrap;
   font-weight: 300;
   padding: 1.1rem 0.9375rem;
+  font-size: 1.1rem;
 }
 
 .dataTables_wrapper .dataTable tbody tr:nth-child(odd) {

@@ -24,7 +24,7 @@ from datetime import datetime,timedelta
 from picklefield.fields import PickledObjectField
 import re,requests,json
 from bs4 import BeautifulSoup
-
+print('asssss',SENDGRID_API_KEY,DEFAULT_FROM_EMAIL)
 # Create your models here.
 class Profile(models.Model):
 	user = models.ForeignKey(User,on_delete=models.CASCADE)
@@ -183,7 +183,7 @@ class Lead(models.Model):
 	account_name = models.CharField(max_length=255, null=True, blank=True)
 	opportunity_amount = models.DecimalField(_("Opportunity Amount"), decimal_places=2, max_digits=12, blank=True, null=True)
 	created_by = models.ForeignKey(User, related_name="lead_created_by", on_delete=models.SET_NULL, null=True)
-	created_on = models.DateTimeField(_("Created on"), auto_now_add=True)
+	created_on = models.DateTimeField(_("Created on"), auto_now_add=True)	
 	tags = models.ManyToManyField('contact_management.Tag',related_name='lead_tags')
 	is_active = models.BooleanField(default=False)
 	follow_up_date = models.DateField(null=True)
@@ -353,9 +353,14 @@ class EmailCampaign(models.Model):
 			c = Contact.objects.get(pk=26)
 			c.send_email(subject,body,self.sg_template_on,sg_template,template,self.id)
 			print(self.sg_template_on,sg_template)
+			print('sg info ',SENDGRID_API_KEY,DEFAULT_FROM_EMAIL)
 			print('successful testful')
 	def send_emails(self):
 		import time
+		print('sending EMALSISS')
+		email_info = SendGridInfoData.objects.get(pk=1).data
+		sent = email_info[email_info.CAMPAIGN==str(self.pk)].TO.to_list()
+		print(self.leads.exclude(email__in=sent).count(),'LEADS COUNT < 1390')
 		if self.sent == False:
 			subject = self.subject
 			body = None
@@ -365,27 +370,34 @@ class EmailCampaign(models.Model):
 			else:
 				sg_template = None
 				template = self.template
-			for a in self.accounts.all():
-				try:
-					a.send_email(subject,body,self.sg_template_on,sg_template,template,self.id)
-				except:
-					print('not sent to ',a)
-					pass
+			for a in self.accounts.exclude(email__in=sent):
+				if email_info[(email_info['TO']==a.email)&(email_info['CAMPAIGN']==str(self.pk))].empty==True:
+					try:
+						a.send_email(subject,body,self.sg_template_on,sg_template,template,self.id)
+					except:
+						print('not sent to ',a)
+						pass
 				time.sleep(1)
-			for c in self.contacts.all():
-				try:
-					c.send_email(subject,body,self.sg_template_on,sg_template,template,self.id)
-					print(f"sent email to {c}")		
-				except:
-					print('not sent to', c)
-					pass
+			for c in self.contacts.exclude(email__in=sent):
+				if email_info[(email_info['TO']==c.email)&(email_info['CAMPAIGN']==str(self.pk))].empty==True:
+					try:
+						c.send_email(subject,body,self.sg_template_on,sg_template,template,self.id)
+						print(f"sent email to {c}")		
+					except:
+						print('not sent to', c)
+						pass
+				else:
+					print('already sent to ', c)
 				time.sleep(1)
-			for l in self.leads.all():
-				try:
-					l.send_email(subject,body,self.sg_template_on,sg_template,template,self.id)	
-					print(f"sent email to {l}")
-				except:
-					print('not sent to l', l)
+			for l in self.leads.exclude(email__in=sent):
+				if email_info[(email_info['TO']==l.email)&(email_info['CAMPAIGN']==str(self.pk))].empty==True:
+					try:
+						l.send_email(subject,body,self.sg_template_on,sg_template,template,self.id)	
+						print(f"sent email to {l}")
+					except:
+						print('not sent to l', l)
+				else:
+					print('already sent to ', l)
 				time.sleep(1)
 			self.sent = True
 			self.save()

@@ -11,17 +11,23 @@
 .table-line {
 	line-height: 20px;
 }
+.scroll-div-small {
+  height:200px;
+  overflow-y: scroll;
+}
 </style>
+
+
 
 <div class="content-wrapper">	
 	<div class="row">		
-		<div class="col-sm-4">
+		<div class="col-sm-3">
 			<div class="card">
 				<div class="card-body">						
 					<div class="card-title">email campaign details</div>
 						
 					<div class="table-responsive-sm">
-						<table class="table table-sm table-hover">
+						<table class="table table-lg table-hover">
 							<tr>
 								<th>SUBJECT</th>
 								<td>{{object.subject}}</td>
@@ -104,7 +110,7 @@
 			{% endif %}
 
 		</div>		
-		<div class="col-sm-8">
+		<div class="col-sm-9">
 			{% if object.sent == False %}
 		
 			<div class="card anyClass">
@@ -149,8 +155,8 @@
 			<div class="card">
 				<div class="card-body">
 					<div class="card-title">STATS</div>
-					<div class="table-responsive-sm">
-						<table class="table table-borderless table-sm" id="stats">
+					<div class="table-responsive">
+						<table class="table table-borderless table-sm" id="stats-table">
 							<thead>
 								<tr>
 									<th class="text-center">SENT</th>
@@ -172,7 +178,7 @@
 			</div>
 			<div class="card anyClass">
 				<div class="card-body">
-					<div class="card-title">MESSAGES</div>					
+				<div class="card-title">MESSAGES</div>					
 
 					<div class="table-responsive">
 						<table class="table table-sm table-hover" id="messages-table">
@@ -204,12 +210,16 @@
 		</div>
 	</div>
 </div>
+
 <script type="text/javascript">
 	$(document).ready(function(){
 		var campaignId = "{{object.pk}}"
 		Promise.all([
 			fetch("{% url 'contact_management:campaign_contacts' 123456789 %}".replace(/123456789/,campaignId.toString()),{}),
-			fetch("{% url 'contact_management:email_contacts_feed' %}",{})
+			fetch("{% url 'contact_management:email_contacts_feed' %}",{}),
+			fetch("{% url 'contact_management:email_campaign_messages_feed' 999888777 %}".replace('999888777',campaignId.toString()),{}),
+			fetch("{% url 'contact_management:campaign_ajax' campaign_id=987654321 %}".replace(/987654321/,campaignId.toString()))
+
 			]).then(function(responses){
 				return Promise.all(responses.map(function(response){
 					return response.json();
@@ -219,8 +229,11 @@
 				}).then(function(data){
 					var targets = data[0]["targets"];
 					var contacts = JSON.parse(data[1]["contacts"]);
-
+					var messages = JSON.parse(data[2]["campaign"]);
+					var stats = [JSON.parse(data[3]["stats"])];
+					console.log(messages);
 					console.log(contacts);
+					console.log(stats);
 					var campaignContactsTable = $('#campaign-contacts').dataTable({
 						"destroy":true,
 						dom:"Blftrip",
@@ -239,7 +252,10 @@
 							{"extend":"pdfHtml5","orientation":"landscape","title":"CAMPAIGN CONTACTS"},
 							{
 								text:"EMAIL CONTACTS",
-								action:function(e,dt,node,config){}
+								action:function(e,dt,node,config){
+									confirm("would you like to send out this email?");
+									fetch("{% url 'contact_management:send_email_campaign' 'XXXXX' %}".replace('XXXXX',campaignId.toString()),{}).then(location.reload());
+								}
 							},
 							{
 								text:"SEND TEST EMAIL",
@@ -306,9 +322,9 @@
          						'defaultContent':`<span></span>`,	
          						
         					 },
-							{"data":"full_name"},
-							{"data":"account","render":function(data,type,row,meta){return `<div class="text-wrap width="200">`+data+`</div>` }},
-							{"data":"email","render":function(data,type,row,meta){return `<div class="text-wrap width="200">`+data+`</div>`}},
+							{"data":"full_name","width":"20%"},
+							{"data":"account","render":function(data,type,row,meta){return `<div class="text-wrap width="100">`+data+`</div>` },"width":"20%"},
+							{"data":"email","render":function(data,type,row,meta){return `<div class="text-wrap width="200">`+data+`</div>`},"width":"20%"},
 							{"data":"type","width":"7%"},
 							{"data":"state","width":"5%"},
 							{"data":null,"width":"5%","render":function(data,type,row,meta){
@@ -335,7 +351,7 @@
 					})
 					 $('#contacts-table thead tr').clone(false).appendTo( '#contacts-table thead' );
 			   		 $('#contacts-table thead tr:eq(1) th').each( function (i) {
-			   		 	 if(i!==0 && i!==5){
+			   		 	 if(i!==0 && i!==6){
 			        var title = $(this).text();
 			        $(this).html( '<input type="text" placeholder="Search '+title+'" />' );}
 			 
@@ -348,9 +364,42 @@
 			            }
 			        } );
     				});
-					
-
-					
+			   		$('#messages-table').DataTable({
+			   			data:messages,
+			   			dom:"Bftrip",
+			   			columns:[
+			   				{"data":"FIRST_NAME","defaultContent":"","render":function(data,type,row,meta){
+			   						return row["FIRST_NAME"]+` `+row["LAST_NAME"]
+			   				}},
+			   				{"data":"ACCOUNT_NAME"},
+			   				{"data":"OPENED"},
+			   				{"data":"CLICKED"},
+			   				{"data":"CLICKEDURL","defaultContent":"","render":function(data,type,row,meta){return `<div class="text-wrap" width="100">`+data+`</div>`}},
+			   				{"data":"BOUNCED"},
+			   				{"data":"UNSUBSCRIBED"},
+			   				{"data":"DATETIME"}
+			   			],
+			   			buttons:[
+			   				{"text":"Follow-Up"},
+			   			]
+			   		});
+			   		$('#stats-table').DataTable({
+			   			data:stats,
+			   			dom:"Bftrip",
+			   			columns:[
+			   				{"data":"sent",},
+			   				{"data":"delivered"},
+			   				{"data":"opens"},
+			   				{"data":"unique_opens"},
+			   				{"data":"clicks"},
+			   				{"data":"unique_clicks"},
+			   				{"data":"unsubscribes"},
+			   				{"data":"bounces"}
+			   			],
+			   			buttons:[
+			   				{"text":"Follow-Up"},
+			   			]
+			   		})					
 				})
 			});
 		//try to do something with Promise.all([])
